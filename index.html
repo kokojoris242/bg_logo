@@ -44,11 +44,10 @@
         <p id="error-message"></p>
     </div>
 
-    <!-- Three.js über ES6 Module laden -->
-    <script type="module">
-        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
-        import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js';
-
+    <!-- Klassische Three.js-Einbindung ohne Module -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
         // Scene Setup
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf0f0f0);
@@ -89,14 +88,14 @@
 
         // Load GLB Model
         function loadGLBModel(url) {
-            const loader = new GLTFLoader();
+            const loader = new THREE.GLTFLoader();
             loader.load(
                 url,
-                (gltf) => {
+                function (gltf) {
                     if (model) scene.remove(model);
                     model = gltf.scene;
                     // Enable shadows
-                    model.traverse((child) => {
+                    model.traverse(function(child) {
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
@@ -113,11 +112,11 @@
                     scene.add(model);
                     document.getElementById('loading').style.display = 'none';
                 },
-                (xhr) => {
+                function (xhr) {
                     const percentComplete = (xhr.loaded / xhr.total) * 100;
                     console.log(percentComplete + '% geladen');
                 },
-                (error) => {
+                function (error) {
                     console.error('Fehler beim Laden:', error);
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('error').style.display = 'block';
@@ -128,7 +127,7 @@
         }
 
         // Mouse Controls
-        renderer.domElement.addEventListener('mousedown', (e) => {
+        renderer.domElement.addEventListener('mousedown', function(e) {
             if (e.button === 0) {
                 isDragging = true;
                 previousMousePosition = {
@@ -137,7 +136,7 @@
                 };
             }
         });
-        renderer.domElement.addEventListener('mousemove', (e) => {
+        renderer.domElement.addEventListener('mousemove', function(e) {
             if (isDragging && model) {
                 const deltaMove = {
                     x: e.clientX - previousMousePosition.x,
@@ -151,12 +150,12 @@
                 };
             }
         });
-        renderer.domElement.addEventListener('mouseup', () => {
+        renderer.domElement.addEventListener('mouseup', function() {
             isDragging = false;
         });
 
         // Mouse wheel for zoom
-        renderer.domElement.addEventListener('wheel', (e) => {
+        renderer.domElement.addEventListener('wheel', function(e) {
             e.preventDefault();
             const zoomSpeed = 0.1;
             camera.position.z += e.deltaY * zoomSpeed * 0.01;
@@ -166,7 +165,7 @@
         // Touch controls
         let touchStart = null;
         let touchDistance = 0;
-        renderer.domElement.addEventListener('touchstart', (e) => {
+        renderer.domElement.addEventListener('touchstart', function(e) {
             if (e.touches.length === 1) {
                 touchStart = {
                     x: e.touches[0].clientX,
@@ -178,7 +177,7 @@
                 touchDistance = Math.sqrt(dx * dx + dy * dy);
             }
         });
-        renderer.domElement.addEventListener('touchmove', (e) => {
+        renderer.domElement.addEventListener('touchmove', function(e) {
             e.preventDefault();
             if (e.touches.length === 1 && touchStart && model) {
                 const touch = e.touches[0];
@@ -211,7 +210,7 @@
         }
 
         // Window Resize
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', function() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
