@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Viewer</title>
+    <title>3D Floating Objects</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f0f0;
+            background: #f5f5f5;
             overflow: hidden;
         }
 
@@ -32,8 +32,8 @@
     
     <script>
         let scene, camera, renderer;
-        let isDragging = false;
-        let previousMousePosition = { x: 0, y: 0 };
+        let objects = [];
+        let mouseX = 0, mouseY = 0;
 
         window.addEventListener('load', function() {
             init();
@@ -42,79 +42,63 @@
         function init() {
             // Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf0f0f0);
+            scene.background = new THREE.Color(0xf5f5f5);
 
-            // Camera
-            camera = new THREE.PerspectiveCamera(
-                75,
-                window.innerWidth / window.innerHeight,
-                0.1,
+            // Camera - Orthographic für 2D Look
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 20;
+            camera = new THREE.OrthographicCamera(
+                frustumSize * aspect / -2, 
+                frustumSize * aspect / 2, 
+                frustumSize / 2, 
+                frustumSize / -2, 
+                -1000, 
                 1000
             );
-            camera.position.set(0, 0, 8);
+            camera.position.set(0, 0, 10);
 
             // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            // Lighting - Helles, weiches Licht wie in den Beispielen
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 5, 5);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
 
-            // Load Models
-            loadModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/x2_logo.glb', -3, 0, 0, model => {
-                model.rotation.x = -Math.PI / 2;
-            });
+            // Rim light für den Glow-Effekt
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            rimLight.position.set(-5, -5, 10);
+            scene.add(rimLight);
+
+            // Load Models mit floating properties
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/x2_logo.glb', 
+                { x: -8, y: 3, scale: 2.5, rotationSpeed: 0.01, floatSpeed: 0.5, floatRange: 0.3 });
             
-            loadModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/buch.glb', 3, 0, 0);
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/buch.glb', 
+                { x: 6, y: -2, scale: 2, rotationSpeed: -0.008, floatSpeed: 0.7, floatRange: 0.4 });
             
-            loadModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/uludag.glb', 0, 0, 0);
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/uludag.glb', 
+                { x: 0, y: 4, scale: 2.2, rotationSpeed: 0.006, floatSpeed: 0.6, floatRange: 0.35 });
 
-            // Mouse Controls
-            renderer.domElement.addEventListener('mousedown', (e) => {
-                if (e.button === 0) {
-                    isDragging = true;
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
-                }
-            });
-
-            renderer.domElement.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    const deltaMove = {
-                        x: e.clientX - previousMousePosition.x,
-                        y: e.clientY - previousMousePosition.y
-                    };
-
-                    const rotationSpeed = 0.005;
-                    scene.rotation.y += deltaMove.x * rotationSpeed;
-                    scene.rotation.x += deltaMove.y * rotationSpeed;
-
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
-                }
-            });
-
-            renderer.domElement.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-
-            // Zoom
-            renderer.domElement.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                camera.position.z += e.deltaY * 0.01;
-                camera.position.z = Math.max(3, Math.min(20, camera.position.z));
-            });
+            // Mouse movement
+            document.addEventListener('mousemove', onMouseMove);
 
             // Animation
             animate();
         }
 
-        function loadModel(url, x, y, z, callback) {
+        function loadFloatingModel(url, properties) {
             const loader = new THREE.GLTFLoader();
             
             loader.load(
@@ -122,17 +106,45 @@
                 (gltf) => {
                     const model = gltf.scene;
                     
+                    // Enable shadows
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            // Leicht glänzendes Material
+                            if (child.material) {
+                                child.material.metalness = 0.1;
+                                child.material.roughness = 0.7;
+                            }
+                        }
+                    });
+                    
                     // Auto-scale
                     const box = new THREE.Box3().setFromObject(model);
                     const size = box.getSize(new THREE.Vector3());
                     const maxDim = Math.max(size.x, size.y, size.z);
-                    const scale = 2 / maxDim;
+                    const scale = properties.scale / maxDim;
                     
                     model.scale.multiplyScalar(scale);
-                    model.position.set(x, y, z);
+                    model.position.set(properties.x, properties.y, 0);
                     
-                    if (callback) callback(model);
+                    // Special rotation für x2_logo
+                    if (url.includes('x2_logo')) {
+                        model.rotation.x = -Math.PI / 2;
+                    }
                     
+                    // Zufällige Start-Rotation
+                    model.rotation.z = Math.random() * Math.PI * 2;
+                    
+                    // Floating properties
+                    model.userData = {
+                        ...properties,
+                        initialY: properties.y,
+                        floatOffset: Math.random() * Math.PI * 2,
+                        velocity: { x: (Math.random() - 0.5) * 0.02, y: (Math.random() - 0.5) * 0.02 }
+                    };
+                    
+                    objects.push(model);
                     scene.add(model);
                 },
                 undefined,
@@ -142,20 +154,94 @@
             );
         }
 
+        function onMouseMove(event) {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
         function animate() {
             requestAnimationFrame(animate);
             
-            // Auto-rotate wenn nicht gezogen wird
-            if (!isDragging) {
-                scene.rotation.y += 0.003;
-            }
+            objects.forEach((object, index) => {
+                if (!object.userData) return;
+                
+                // Floating animation
+                const time = Date.now() * 0.001;
+                object.position.y = object.userData.initialY + 
+                    Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
+                    object.userData.floatRange;
+                
+                // Rotation
+                object.rotation.y += object.userData.rotationSpeed;
+                object.rotation.z += object.userData.rotationSpeed * 0.3;
+                
+                // Schwerkraft zu den Rändern
+                const edgeForce = 0.0002;
+                const dampening = 0.98;
+                
+                // Horizontal movement mit Rand-Gravitation
+                if (object.position.x > 7) {
+                    object.userData.velocity.x -= edgeForce;
+                } else if (object.position.x < -7) {
+                    object.userData.velocity.x += edgeForce;
+                }
+                
+                // Vertical movement mit Rand-Gravitation
+                if (object.position.y > 5) {
+                    object.userData.velocity.y -= edgeForce;
+                } else if (object.position.y < -5) {
+                    object.userData.velocity.y += edgeForce;
+                }
+                
+                // Mouse influence - Objekte werden vom Mauszeiger leicht angezogen/abgestoßen
+                const mouseInfluence = 0.00005;
+                const dx = mouseX * 10 - object.position.x;
+                const dy = mouseY * 6 - object.position.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 5 && distance > 0.1) {
+                    // Abstoßung wenn nah
+                    object.userData.velocity.x -= (dx / distance) * mouseInfluence * 2;
+                    object.userData.velocity.y -= (dy / distance) * mouseInfluence * 2;
+                } else if (distance > 5) {
+                    // Leichte Anziehung wenn weit weg
+                    object.userData.velocity.x += (dx / distance) * mouseInfluence;
+                    object.userData.velocity.y += (dy / distance) * mouseInfluence;
+                }
+                
+                // Apply velocity
+                object.userData.velocity.x *= dampening;
+                object.userData.velocity.y *= dampening;
+                
+                object.position.x += object.userData.velocity.x;
+                
+                // Bounce off edges
+                if (object.position.x > 9 || object.position.x < -9) {
+                    object.userData.velocity.x *= -0.8;
+                    object.position.x = Math.max(-9, Math.min(9, object.position.x));
+                }
+                if (object.position.y > 6 || object.position.y < -6) {
+                    object.userData.velocity.y *= -0.8;
+                    object.position.y = Math.max(-6, Math.min(6, object.position.y));
+                }
+                
+                // Subtle parallax effect basierend auf Index
+                object.position.z = Math.sin(time * 0.3 + index) * 0.5;
+            });
             
             renderer.render(scene, camera);
         }
 
         // Window Resize
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            const aspect = window.innerWidth / window.innerHeight;
+            const frustumSize = 20;
+            
+            camera.left = frustumSize * aspect / -2;
+            camera.right = frustumSize * aspect / 2;
+            camera.top = frustumSize / 2;
+            camera.bottom = frustumSize / -2;
+            
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
