@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Multi-Object Viewer</title>
+    <title>3D Viewer</title>
     <style>
         * {
             margin: 0;
@@ -21,165 +21,42 @@
             width: 100vw;
             height: 100vh;
             position: relative;
-            cursor: grab;
-        }
-
-        #canvas-container:active {
-            cursor: grabbing;
-        }
-
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid #f0f0f0;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .error {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            color: #e53e3e;
-        }
-
-        .controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-        }
-
-        .controls button {
-            display: block;
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .controls button:hover {
-            background: #5a67d8;
-        }
-
-        .controls button:last-child {
-            margin-bottom: 0;
-        }
-
-        .info {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            max-width: 300px;
-            z-index: 10;
         }
     </style>
 </head>
 <body>
     <div id="canvas-container"></div>
 
-    <div class="loading" id="loading">
-        <div class="loading-spinner"></div>
-        <p>Lade 3D-Modelle...</p>
-    </div>
-
-    <div class="error" id="error">
-        <h3>Fehler beim Laden</h3>
-        <p id="error-message"></p>
-    </div>
-
-    <div class="controls">
-        <h3>3D Objekte</h3>
-        <button onclick="addSphere()">Kugel hinzufügen</button>
-        <button onclick="addCube()">Würfel hinzufügen</button>
-        <button onclick="addBookCopy()">Buch-Kopie hinzufügen</button>
-        <button onclick="togglePhysics()">Physik An/Aus</button>
-        <button onclick="clearObjects()">Alle löschen</button>
-    </div>
-
-    <div class="info">
-        <strong>Steuerung:</strong><br>
-        • Linke Maustaste: Kamera drehen<br>
-        • Mausrad: Zoom<br>
-        • Objekte kollidieren miteinander
-    </div>
-
-    <!-- Three.js mit GLTFLoader Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     
     <script>
         let scene, camera, renderer;
-        let models = [];
-        let physicsEnabled = true;
-        let mainModel = null;
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
 
-        // Warte bis Three.js geladen ist
         window.addEventListener('load', function() {
             init();
         });
 
         function init() {
-            // Scene Setup
+            // Scene
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf0f0f0);
 
-            // Camera Setup
+            // Camera
             camera = new THREE.PerspectiveCamera(
                 75,
                 window.innerWidth / window.innerHeight,
                 0.1,
                 1000
             );
-            camera.position.set(0, 5, 10);
-            camera.lookAt(0, 0, 0);
+            camera.position.set(0, 0, 8);
 
-            // Renderer Setup
+            // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             // Lighting
@@ -187,38 +64,21 @@
             scene.add(ambientLight);
 
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 10, 5);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.camera.left = -10;
-            directionalLight.shadow.camera.right = 10;
-            directionalLight.shadow.camera.top = 10;
-            directionalLight.shadow.camera.bottom = -10;
+            directionalLight.position.set(5, 5, 5);
             scene.add(directionalLight);
 
-            // Boden
-            const groundGeometry = new THREE.PlaneGeometry(20, 20);
-            const groundMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0xcccccc,
-                side: THREE.DoubleSide 
+            // Load Models
+            loadModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/x2_logo.glb', -3, 0, 0, model => {
+                model.rotation.x = -Math.PI / 2;
             });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -2;
-            ground.receiveShadow = true;
-            scene.add(ground);
+            
+            loadModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/buch.glb', 3, 0, 0);
 
-            // Maus-Steuerung
-            let isDragging = false;
-            let previousMousePosition = { x: 0, y: 0 };
-            let cameraAngle = { x: 0, y: 0 };
-
+            // Mouse Controls
             renderer.domElement.addEventListener('mousedown', (e) => {
                 if (e.button === 0) {
                     isDragging = true;
-                    previousMousePosition = {
-                        x: e.clientX,
-                        y: e.clientY
-                    };
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
                 }
             });
 
@@ -229,23 +89,11 @@
                         y: e.clientY - previousMousePosition.y
                     };
 
-                    cameraAngle.x += deltaMove.x * 0.01;
-                    cameraAngle.y += deltaMove.y * 0.01;
+                    const rotationSpeed = 0.005;
+                    scene.rotation.y += deltaMove.x * rotationSpeed;
+                    scene.rotation.x += deltaMove.y * rotationSpeed;
 
-                    // Begrenze vertikale Rotation
-                    cameraAngle.y = Math.max(-Math.PI/2, Math.min(Math.PI/2, cameraAngle.y));
-
-                    // Aktualisiere Kamera-Position
-                    const radius = 10;
-                    camera.position.x = radius * Math.sin(cameraAngle.x) * Math.cos(cameraAngle.y);
-                    camera.position.y = radius * Math.sin(cameraAngle.y) + 3;
-                    camera.position.z = radius * Math.cos(cameraAngle.x) * Math.cos(cameraAngle.y);
-                    camera.lookAt(0, 0, 0);
-
-                    previousMousePosition = {
-                        x: e.clientX,
-                        y: e.clientY
-                    };
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
                 }
             });
 
@@ -253,309 +101,51 @@
                 isDragging = false;
             });
 
-            // Mouse wheel for zoom
+            // Zoom
             renderer.domElement.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                const zoomSpeed = 0.1;
-                const distance = camera.position.length();
-                const newDistance = distance + e.deltaY * zoomSpeed * 0.01;
-                if (newDistance > 5 && newDistance < 50) {
-                    camera.position.multiplyScalar(newDistance / distance);
-                }
+                camera.position.z += e.deltaY * 0.01;
+                camera.position.z = Math.max(3, Math.min(20, camera.position.z));
             });
 
-            // Animation Loop
+            // Animation
             animate();
-
-            // Lade das Haupt-Logo
-            loadMainModel();
-            
-            // Lade das Buch-Modell nach einer kurzen Verzögerung
-            setTimeout(loadBookModel, 1000);
         }
 
-        function loadMainModel() {
+        function loadModel(url, x, y, z, callback) {
             const loader = new THREE.GLTFLoader();
             
             loader.load(
-                'https://raw.githubusercontent.com/kokojoris242/bg_logo/main/x2_logo.glb',
+                url,
                 (gltf) => {
-                    mainModel = gltf.scene;
+                    const model = gltf.scene;
                     
-                    // Enable shadows
-                    mainModel.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                    
-                    // Auto-center and scale
-                    const box = new THREE.Box3().setFromObject(mainModel);
-                    const center = box.getCenter(new THREE.Vector3());
-                    const size = box.getSize(new THREE.Vector3());
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    const scale = 3 / maxDim;
-                    
-                    mainModel.scale.multiplyScalar(scale);
-                    mainModel.position.set(0, 0, 0);
-                    mainModel.position.sub(center.multiplyScalar(scale));
-                    
-                    // Drehe das Modell um 90 Grad
-                    mainModel.rotation.x = -Math.PI / 2;
-                    
-                    // Füge Physik-Eigenschaften hinzu
-                    mainModel.userData.velocity = new THREE.Vector3(0, 0, 0);
-                    mainModel.userData.mass = 5;
-                    mainModel.userData.radius = 1.5;
-                    
-                    models.push(mainModel);
-                    scene.add(mainModel);
-                    document.getElementById('loading').style.display = 'none';
-                },
-                (xhr) => {
-                    if (xhr.lengthComputable) {
-                        const percentComplete = (xhr.loaded / xhr.total) * 100;
-                        console.log(Math.round(percentComplete) + '% geladen');
-                    }
-                },
-                (error) => {
-                    console.error('Fehler beim Laden:', error);
-                    document.getElementById('loading').style.display = 'none';
-                }
-            );
-        }
-
-        // Lade das Buch-Modell
-        function loadBookModel() {
-            const loader = new THREE.GLTFLoader();
-            
-            loader.load(
-                'https://raw.githubusercontent.com/kokojoris242/bg_logo/main/buch.glb',
-                (gltf) => {
-                    const book = gltf.scene;
-                    
-                    // Enable shadows
-                    book.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                    
-                    // Auto-center and scale
-                    const box = new THREE.Box3().setFromObject(book);
-                    const center = box.getCenter(new THREE.Vector3());
+                    // Auto-scale
+                    const box = new THREE.Box3().setFromObject(model);
                     const size = box.getSize(new THREE.Vector3());
                     const maxDim = Math.max(size.x, size.y, size.z);
                     const scale = 2 / maxDim;
                     
-                    book.scale.multiplyScalar(scale);
+                    model.scale.multiplyScalar(scale);
+                    model.position.set(x, y, z);
                     
-                    // Position rechts vom Logo
-                    book.position.set(4, 0, 0);
+                    if (callback) callback(model);
                     
-                    // Füge Physik-Eigenschaften hinzu
-                    book.userData.velocity = new THREE.Vector3(0, 0, 0);
-                    book.userData.mass = 3;
-                    book.userData.radius = 1;
-                    
-                    models.push(book);
-                    scene.add(book);
-                    console.log('Buch-Modell geladen');
+                    scene.add(model);
                 },
-                (xhr) => {
-                    if (xhr.lengthComputable) {
-                        const percentComplete = (xhr.loaded / xhr.total) * 100;
-                        console.log('Buch: ' + Math.round(percentComplete) + '% geladen');
-                    }
-                },
+                undefined,
                 (error) => {
-                    console.error('Fehler beim Laden des Buchs:', error);
+                    console.error('Error loading model:', error);
                 }
             );
         }
 
-        // Füge eine Kugel hinzu
-        function addSphere() {
-            const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-            const material = new THREE.MeshPhongMaterial({ 
-                color: Math.random() * 0xffffff,
-                metalness: 0.3,
-                roughness: 0.7
-            });
-            const sphere = new THREE.Mesh(geometry, material);
-            
-            sphere.position.set(
-                (Math.random() - 0.5) * 8,
-                Math.random() * 5 + 2,
-                (Math.random() - 0.5) * 8
-            );
-            
-            sphere.castShadow = true;
-            sphere.receiveShadow = true;
-            
-            // Physik-Eigenschaften
-            sphere.userData.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 0.1,
-                0,
-                (Math.random() - 0.5) * 0.1
-            );
-            sphere.userData.mass = 1;
-            sphere.userData.radius = 0.5;
-            
-            models.push(sphere);
-            scene.add(sphere);
-        }
-
-        // Füge einen Würfel hinzu
-        function addCube() {
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshPhongMaterial({ 
-                color: Math.random() * 0xffffff,
-                metalness: 0.3,
-                roughness: 0.7
-            });
-            const cube = new THREE.Mesh(geometry, material);
-            
-            cube.position.set(
-                (Math.random() - 0.5) * 8,
-                Math.random() * 5 + 2,
-                (Math.random() - 0.5) * 8
-            );
-            
-            cube.rotation.set(
-                Math.random() * Math.PI,
-                Math.random() * Math.PI,
-                Math.random() * Math.PI
-            );
-            
-            cube.castShadow = true;
-            cube.receiveShadow = true;
-            
-            // Physik-Eigenschaften
-            cube.userData.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 0.1,
-                0,
-                (Math.random() - 0.5) * 0.1
-            );
-            cube.userData.mass = 2;
-            cube.userData.radius = 0.7; // Ungefährer Radius
-            
-            models.push(cube);
-            scene.add(cube);
-        }
-
-        // Physik ein/aus
-        function togglePhysics() {
-            physicsEnabled = !physicsEnabled;
-        }
-
-        // Alle Objekte löschen (außer dem Hauptmodell)
-        function clearObjects() {
-            for (let i = models.length - 1; i >= 0; i--) {
-                if (models[i] !== mainModel) {
-                    scene.remove(models[i]);
-                    models.splice(i, 1);
-                }
-            }
-        }
-
-        // Einfache Kollisionserkennung
-        function checkCollisions() {
-            for (let i = 0; i < models.length; i++) {
-                for (let j = i + 1; j < models.length; j++) {
-                    const obj1 = models[i];
-                    const obj2 = models[j];
-                    
-                    const distance = obj1.position.distanceTo(obj2.position);
-                    const minDistance = obj1.userData.radius + obj2.userData.radius;
-                    
-                    if (distance < minDistance) {
-                        // Kollision erkannt!
-                        resolveCollision(obj1, obj2);
-                    }
-                }
-            }
-        }
-
-        // Kollision auflösen
-        function resolveCollision(obj1, obj2) {
-            const normal = new THREE.Vector3().subVectors(obj2.position, obj1.position).normalize();
-            const relativeVelocity = new THREE.Vector3().subVectors(obj2.userData.velocity, obj1.userData.velocity);
-            const speed = relativeVelocity.dot(normal);
-            
-            if (speed < 0) return; // Objekte bewegen sich bereits voneinander weg
-            
-            const impulse = 2 * speed / (obj1.userData.mass + obj2.userData.mass);
-            
-            obj1.userData.velocity.add(normal.clone().multiplyScalar(impulse * obj2.userData.mass));
-            obj2.userData.velocity.sub(normal.clone().multiplyScalar(impulse * obj1.userData.mass));
-            
-            // Objekte leicht voneinander wegbewegen
-            const overlap = (obj1.userData.radius + obj2.userData.radius) - obj1.position.distanceTo(obj2.position);
-            const separation = normal.clone().multiplyScalar(overlap / 2);
-            obj1.position.sub(separation);
-            obj2.position.add(separation);
-        }
-
-        // Update Physik
-        function updatePhysics(deltaTime) {
-            if (!physicsEnabled) return;
-            
-            models.forEach(model => {
-                if (!model.userData.velocity) return;
-                
-                // Schwerkraft
-                model.userData.velocity.y -= 9.81 * deltaTime;
-                
-                // Position aktualisieren
-                model.position.add(model.userData.velocity.clone().multiplyScalar(deltaTime));
-                
-                // Bodenkollision
-                if (model.position.y - model.userData.radius < -2) {
-                    model.position.y = -2 + model.userData.radius;
-                    model.userData.velocity.y *= -0.7; // Dämpfung
-                    model.userData.velocity.x *= 0.9; // Reibung
-                    model.userData.velocity.z *= 0.9;
-                }
-                
-                // Wände (unsichtbar)
-                const boundary = 9;
-                if (Math.abs(model.position.x) > boundary) {
-                    model.position.x = Math.sign(model.position.x) * boundary;
-                    model.userData.velocity.x *= -0.8;
-                }
-                if (Math.abs(model.position.z) > boundary) {
-                    model.position.z = Math.sign(model.position.z) * boundary;
-                    model.userData.velocity.z *= -0.8;
-                }
-                
-                // Rotation basierend auf Geschwindigkeit
-                if (model.geometry && model.geometry.type === 'BoxGeometry') {
-                    model.rotation.x += model.userData.velocity.x * deltaTime;
-                    model.rotation.z += model.userData.velocity.z * deltaTime;
-                }
-            });
-            
-            // Kollisionen prüfen
-            checkCollisions();
-        }
-
-        let lastTime = 0;
-        function animate(currentTime) {
+        function animate() {
             requestAnimationFrame(animate);
             
-            const deltaTime = (currentTime - lastTime) / 1000;
-            lastTime = currentTime;
-            
-            if (deltaTime < 0.1) { // Verhindere große Zeitsprünge
-                updatePhysics(deltaTime);
-            }
-            
-            // Rotiere das Hauptmodell
-            if (mainModel && !physicsEnabled) {
-                mainModel.rotation.y += 0.01;
+            // Auto-rotate wenn nicht gezogen wird
+            if (!isDragging) {
+                scene.rotation.y += 0.003;
             }
             
             renderer.render(scene, camera);
