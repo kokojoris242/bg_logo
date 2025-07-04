@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Floating Objects</title>
+    <title>3D Floating Objects with Rotating Gravity</title>
     <style>
         * {
             margin: 0;
@@ -65,31 +65,31 @@
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // Lighting - Helles, weiches Licht wie in den Beispielen
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            // Lighting - Viel heller (+2 brightness)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.6); // von 0.8 auf 1.6
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // von 0.5 auf 1.0
             directionalLight.position.set(5, 10, 5);
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = 2048;
             directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
 
-            // Rim light für den Glow-Effekt
-            const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            // Rim light für den Glow-Effekt - auch heller
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.6); // von 0.3 auf 0.6
             rimLight.position.set(-5, -5, 10);
             scene.add(rimLight);
 
-            // Load Models mit floating properties
+            // Load Models mit floating properties - 300% größer (scale * 3)
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/x2_logo.glb', 
-                { x: -8, y: 3, scale: 2.5, rotationSpeed: 0.01, floatSpeed: 0.5, floatRange: 0.3 });
+                { x: -8, y: 3, scale: 7.5, rotationSpeed: 0.01, floatSpeed: 0.5, floatRange: 0.3, radius: 2.5 });
             
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/buch.glb', 
-                { x: 6, y: -2, scale: 2, rotationSpeed: -0.008, floatSpeed: 0.7, floatRange: 0.4 });
+                { x: 6, y: -2, scale: 6, rotationSpeed: -0.008, floatSpeed: 0.7, floatRange: 0.4, radius: 2.0 });
             
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/uludag.glb', 
-                { x: 0, y: 4, scale: 2.2, rotationSpeed: 0.006, floatSpeed: 0.6, floatRange: 0.35 });
+                { x: 0, y: 4, scale: 6.6, rotationSpeed: 0.006, floatSpeed: 0.6, floatRange: 0.35, radius: 2.2 });
 
             // Mouse movement
             document.addEventListener('mousemove', onMouseMove);
@@ -106,15 +106,16 @@
                 (gltf) => {
                     const model = gltf.scene;
                     
-                    // Enable shadows
+                    // Enable shadows and make brighter
                     model.traverse((child) => {
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
-                            // Leicht glänzendes Material
+                            // Helleres, glänzenderes Material
                             if (child.material) {
-                                child.material.metalness = 0.1;
-                                child.material.roughness = 0.7;
+                                child.material.metalness = 0.2;
+                                child.material.roughness = 0.5;
+                                child.material.emissive = new THREE.Color(0x222222); // Leichtes Glühen
                             }
                         }
                     });
@@ -136,12 +137,13 @@
                     // Zufällige Start-Rotation
                     model.rotation.z = Math.random() * Math.PI * 2;
                     
-                    // Floating properties
+                    // Floating properties with collision radius
                     model.userData = {
                         ...properties,
                         initialY: properties.y,
                         floatOffset: Math.random() * Math.PI * 2,
-                        velocity: { x: (Math.random() - 0.5) * 0.02, y: (Math.random() - 0.5) * 0.02 }
+                        velocity: { x: (Math.random() - 0.5) * 0.02, y: (Math.random() - 0.5) * 0.02 },
+                        mass: 1.0
                     };
                     
                     objects.push(model);
@@ -159,17 +161,70 @@
             mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
         }
 
+        function checkCollisions() {
+            for (let i = 0; i < objects.length; i++) {
+                for (let j = i + 1; j < objects.length; j++) {
+                    const obj1 = objects[i];
+                    const obj2 = objects[j];
+                    
+                    if (!obj1.userData || !obj2.userData) continue;
+                    
+                    const dx = obj1.position.x - obj2.position.x;
+                    const dy = obj1.position.y - obj2.position.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const minDistance = obj1.userData.radius + obj2.userData.radius;
+                    
+                    if (distance < minDistance && distance > 0) {
+                        // Collision detected - bounce objects
+                        const overlap = minDistance - distance;
+                        const separationX = (dx / distance) * overlap * 0.5;
+                        const separationY = (dy / distance) * overlap * 0.5;
+                        
+                        // Separate objects
+                        obj1.position.x += separationX;
+                        obj1.position.y += separationY;
+                        obj2.position.x -= separationX;
+                        obj2.position.y -= separationY;
+                        
+                        // Calculate bounce velocities
+                        const bounceStrength = 0.8;
+                        const relativeVelocityX = obj1.userData.velocity.x - obj2.userData.velocity.x;
+                        const relativeVelocityY = obj1.userData.velocity.y - obj2.userData.velocity.y;
+                        
+                        // Apply bounce
+                        const bounceX = (dx / distance) * bounceStrength * 0.02;
+                        const bounceY = (dy / distance) * bounceStrength * 0.02;
+                        
+                        obj1.userData.velocity.x += bounceX;
+                        obj1.userData.velocity.y += bounceY;
+                        obj2.userData.velocity.x -= bounceX;
+                        obj2.userData.velocity.y -= bounceY;
+                    }
+                }
+            }
+        }
+
         function animate() {
             requestAnimationFrame(animate);
+            
+            const time = Date.now() * 0.001;
+            
+            // Rotating gravity like a clock hand
+            const gravityAngle = time * 0.5; // Rotation speed
+            const gravityStrength = 0.0005;
+            const gravityX = Math.cos(gravityAngle) * gravityStrength;
+            const gravityY = Math.sin(gravityAngle) * gravityStrength;
             
             objects.forEach((object, index) => {
                 if (!object.userData) return;
                 
+                // Apply rotating gravity
+                object.userData.velocity.x += gravityX;
+                object.userData.velocity.y += gravityY;
+                
                 // Floating animation
-                const time = Date.now() * 0.001;
-                object.position.y = object.userData.initialY + 
-                    Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
-                    object.userData.floatRange;
+                object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
+                    object.userData.floatRange * 0.01;
                 
                 // Rotation
                 object.rotation.y += object.userData.rotationSpeed;
@@ -177,7 +232,7 @@
                 
                 // Schwerkraft zu den Rändern
                 const edgeForce = 0.0002;
-                const dampening = 0.98;
+                const dampening = 0.995;
                 
                 // Horizontal movement mit Rand-Gravitation
                 if (object.position.x > 7) {
@@ -209,11 +264,12 @@
                     object.userData.velocity.y += (dy / distance) * mouseInfluence;
                 }
                 
-                // Apply velocity
+                // Apply velocity with dampening
                 object.userData.velocity.x *= dampening;
                 object.userData.velocity.y *= dampening;
                 
                 object.position.x += object.userData.velocity.x;
+                object.position.y += object.userData.velocity.y;
                 
                 // Bounce off edges
                 if (object.position.x > 9 || object.position.x < -9) {
@@ -228,6 +284,9 @@
                 // Subtle parallax effect basierend auf Index
                 object.position.z = Math.sin(time * 0.3 + index) * 0.5;
             });
+            
+            // Check for collisions between objects
+            checkCollisions();
             
             renderer.render(scene, camera);
         }
