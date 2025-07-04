@@ -91,9 +91,9 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/uludag.glb', 
                 { x: 0, y: 4, scale: 6.6, rotationSpeed: 0.006, floatSpeed: 0.6, floatRange: 0.35, radius: 2.2 });
 
-            // Load PNG images as floating textures
+            // Load PNG images as floating textures - enhanced_replicate 300% bigger
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
-                { x: -4, y: -4, scale: 3, rotationSpeed: 0.005, floatSpeed: 0.4, floatRange: 0.2, radius: 1.5 });
+                { x: -4, y: -4, scale: 9, rotationSpeed: 0.005, floatSpeed: 0.4, floatRange: 0.2, radius: 4.5 });
             
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/pikachu_karte_skitaggu.png', 
                 { x: 4, y: 2, scale: 2.5, rotationSpeed: -0.007, floatSpeed: 0.6, floatRange: 0.25, radius: 1.25 });
@@ -119,6 +119,9 @@
                         alphaTest: 0.1,
                         side: THREE.DoubleSide
                     });
+                    
+                    // Reduce saturation for more natural look
+                    material.color.setHSL(0, 0, 0.85); // Desaturated, slightly darker
                     
                     const mesh = new THREE.Mesh(geometry, material);
                     
@@ -164,11 +167,17 @@
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
-                            // Helleres, glänzenderes Material
+                            // Reduzierte Sättigung für natürlicheren Look
                             if (child.material) {
-                                child.material.metalness = 0.2;
-                                child.material.roughness = 0.5;
-                                child.material.emissive = new THREE.Color(0x222222); // Leichtes Glühen
+                                child.material.metalness = 0.1;
+                                child.material.roughness = 0.8;
+                                child.material.emissive = new THREE.Color(0x111111); // Weniger Glühen
+                                // Desaturate colors
+                                if (child.material.color) {
+                                    const hsl = {};
+                                    child.material.color.getHSL(hsl);
+                                    child.material.color.setHSL(hsl.h, hsl.s * 0.6, hsl.l * 0.9);
+                                }
                             }
                         }
                     });
@@ -283,21 +292,24 @@
                 object.rotation.y += object.userData.rotationSpeed;
                 object.rotation.z += object.userData.rotationSpeed * 0.3;
                 
-                // Schwerkraft zu den Rändern
+                // Schwerkraft zu den Rändern - dynamisch basierend auf Fenstergröße
+                const aspectRatio = window.innerWidth / window.innerHeight;
+                const maxX = 9 * aspectRatio;
+                const maxY = 6;
                 const edgeForce = 0.0002;
                 const dampening = 0.995;
                 
                 // Horizontal movement mit Rand-Gravitation
-                if (object.position.x > 7) {
+                if (object.position.x > maxX - 2) {
                     object.userData.velocity.x -= edgeForce;
-                } else if (object.position.x < -7) {
+                } else if (object.position.x < -maxX + 2) {
                     object.userData.velocity.x += edgeForce;
                 }
                 
                 // Vertical movement mit Rand-Gravitation
-                if (object.position.y > 5) {
+                if (object.position.y > maxY - 1) {
                     object.userData.velocity.y -= edgeForce;
-                } else if (object.position.y < -5) {
+                } else if (object.position.y < -maxY + 1) {
                     object.userData.velocity.y += edgeForce;
                 }
                 
