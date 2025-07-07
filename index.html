@@ -513,8 +513,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Subtle parallax effect basierend auf Index - allow objects to move in front/behind schrift
-                object.position.z = Math.sin(time * 0.3 + index) * 2; // Increased range from 0.5 to 2
+                // Subtle parallax effect basierend auf Index - allow objects to move in front/behind with more depth
+                object.position.z = Math.sin(time * 0.3 + index) * 3 + Math.cos(time * 0.2 + index * 0.5) * 1.5;
             });
             
             // Check for collisions between objects
