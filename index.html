@@ -65,19 +65,19 @@
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // Lighting - Viel heller (+2 brightness)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.6); // von 0.8 auf 1.6
+            // Lighting - Natürlicheres, weniger gesättigtes Licht
+            const ambientLight = new THREE.AmbientLight(0xf8f8f8, 0.7); // Weniger intensiv, wärmeres Weiß
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0); // von 0.5 auf 1.0
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4); // Reduziert von 1.0 auf 0.4
             directionalLight.position.set(5, 10, 5);
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = 2048;
             directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
 
-            // Rim light für den Glow-Effekt - auch heller
-            const rimLight = new THREE.DirectionalLight(0xffffff, 0.6); // von 0.3 auf 0.6
+            // Rim light für subtilen Effekt - deutlich reduziert
+            const rimLight = new THREE.DirectionalLight(0xf0f0f0, 0.2); // Von 0.6 auf 0.2, wärmeres Licht
             rimLight.position.set(-5, -5, 10);
             scene.add(rimLight);
 
@@ -336,14 +336,18 @@
                 object.position.x += object.userData.velocity.x;
                 object.position.y += object.userData.velocity.y;
                 
-                // Bounce off edges
-                if (object.position.x > 9 || object.position.x < -9) {
+                // Bounce off edges - dynamisch basierend auf Fenstergröße
+                const aspectRatio = window.innerWidth / window.innerHeight;
+                const boundaryX = 9 * aspectRatio;
+                const boundaryY = 6;
+                
+                if (object.position.x > boundaryX || object.position.x < -boundaryX) {
                     object.userData.velocity.x *= -0.8;
-                    object.position.x = Math.max(-9, Math.min(9, object.position.x));
+                    object.position.x = Math.max(-boundaryX, Math.min(boundaryX, object.position.x));
                 }
-                if (object.position.y > 6 || object.position.y < -6) {
+                if (object.position.y > boundaryY || object.position.y < -boundaryY) {
                     object.userData.velocity.y *= -0.8;
-                    object.position.y = Math.max(-6, Math.min(6, object.position.y));
+                    object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
                 // Subtle parallax effect basierend auf Index
