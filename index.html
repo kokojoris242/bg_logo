@@ -34,6 +34,11 @@
         let scene, camera, renderer;
         let objects = [];
         let mouseX = 0, mouseY = 0;
+        let isDragging = false;
+        let selectedObject = null;
+        let mouseWorldPos = new THREE.Vector3();
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
 
         window.addEventListener('load', function() {
             init();
@@ -98,8 +103,11 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/pikachu_karte_skitaggu.png', 
                 { x: 4, y: 2, scale: 2.5, rotationSpeed: -0.007, floatSpeed: 0.6, floatRange: 0.25, radius: 1.25 });
 
-            // Mouse movement
+            // Mouse controls
             document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('click', onMouseClick);
 
             // Animation
             animate();
@@ -120,14 +128,14 @@
                         side: THREE.DoubleSide
                     });
                     
-                    // Reduce saturation for more natural look
-                    material.color.setHSL(0, 0, 0.85); // Desaturated, slightly darker
+                    // Weitere Entsättigung für natürlicheren Look
+                    material.color.setHSL(0, 0, 0.75); // Noch weniger gesättigt
                     
                     const mesh = new THREE.Mesh(geometry, material);
                     
                     // Scale based on image aspect ratio
-                    const aspectRatio = texture.image.width / texture.image.height;
-                    mesh.scale.set(properties.scale * aspectRatio, properties.scale, 1);
+                    const imgAspectRatio = texture.image.width / texture.image.height;
+                    mesh.scale.set(properties.scale * imgAspectRatio, properties.scale, 1);
                     
                     mesh.position.set(properties.x, properties.y, 0);
                     
@@ -167,16 +175,16 @@
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
-                            // Reduzierte Sättigung für natürlicheren Look
+                            // Stark reduzierte Sättigung für sehr natürlichen Look
                             if (child.material) {
-                                child.material.metalness = 0.1;
-                                child.material.roughness = 0.8;
-                                child.material.emissive = new THREE.Color(0x111111); // Weniger Glühen
-                                // Desaturate colors
+                                child.material.metalness = 0.05; // Weniger metallisch
+                                child.material.roughness = 0.9; // Rauer, matter
+                                child.material.emissive = new THREE.Color(0x000000); // Kein Glühen
+                                // Starke Entsättigung
                                 if (child.material.color) {
                                     const hsl = {};
                                     child.material.color.getHSL(hsl);
-                                    child.material.color.setHSL(hsl.h, hsl.s * 0.6, hsl.l * 0.9);
+                                    child.material.color.setHSL(hsl.h, hsl.s * 0.3, hsl.l * 0.8); // Noch weniger Sättigung
                                 }
                             }
                         }
@@ -221,6 +229,96 @@
         function onMouseMove(event) {
             mouseX = (event.clientX / window.innerWidth) * 2 - 1;
             mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            // Update mouse position for raycasting
+            mouse.x = mouseX;
+            mouse.y = mouseY;
+            
+            // If dragging, move the selected object
+            if (isDragging && selectedObject) {
+                // Convert mouse position to world coordinates
+                raycaster.setFromCamera(mouse, camera);
+                const intersectPoint = raycaster.ray.origin.clone();
+                
+                // Smooth movement to mouse position
+                selectedObject.userData.targetX = intersectPoint.x;
+                selectedObject.userData.targetY = intersectPoint.y;
+                
+                // Reset velocity when manually controlling
+                selectedObject.userData.velocity.x *= 0.8;
+                selectedObject.userData.velocity.y *= 0.8;
+            }
+        }
+
+        function onMouseDown(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(objects, true);
+            
+            if (intersects.length > 0) {
+                isDragging = true;
+                selectedObject = intersects[0].object;
+                
+                // Find the root object if we hit a child mesh
+                while (selectedObject.parent && selectedObject.parent !== scene) {
+                    selectedObject = selectedObject.parent;
+                }
+                
+                // Visual feedback - slight scale up
+                selectedObject.userData.originalScale = selectedObject.scale.clone();
+                selectedObject.scale.multiplyScalar(1.1);
+                
+                document.body.style.cursor = 'grabbing';
+            }
+        }
+
+        function onMouseUp(event) {
+            if (isDragging && selectedObject) {
+                // Reset scale
+                if (selectedObject.userData.originalScale) {
+                    selectedObject.scale.copy(selectedObject.userData.originalScale);
+                }
+                
+                isDragging = false;
+                selectedObject = null;
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function onMouseClick(event) {
+            if (!isDragging) {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(objects, true);
+                
+                if (intersects.length > 0) {
+                    let clickedObject = intersects[0].object;
+                    
+                    // Find the root object
+                    while (clickedObject.parent && clickedObject.parent !== scene) {
+                        clickedObject = clickedObject.parent;
+                    }
+                    
+                    // Add impulse to clicked object
+                    if (clickedObject.userData) {
+                        const impulseStrength = 0.05;
+                        clickedObject.userData.velocity.x += (Math.random() - 0.5) * impulseStrength;
+                        clickedObject.userData.velocity.y += (Math.random() - 0.5) * impulseStrength;
+                        
+                        // Quick rotation impulse
+                        clickedObject.userData.rotationSpeed *= 2;
+                        setTimeout(() => {
+                            if (clickedObject.userData) {
+                                clickedObject.userData.rotationSpeed *= 0.5;
+                            }
+                        }, 1000);
+                    }
+                }
+            }
         }
 
         function checkCollisions() {
@@ -280,9 +378,24 @@
             objects.forEach((object, index) => {
                 if (!object.userData) return;
                 
-                // Apply rotating gravity
-                object.userData.velocity.x += gravityX;
-                object.userData.velocity.y += gravityY;
+                // Smooth movement towards target if being dragged
+                if (object.userData.targetX !== undefined && object.userData.targetY !== undefined) {
+                    const lerpSpeed = 0.1;
+                    object.position.x += (object.userData.targetX - object.position.x) * lerpSpeed;
+                    object.position.y += (object.userData.targetY - object.position.y) * lerpSpeed;
+                    
+                    // Clear target when close enough
+                    if (Math.abs(object.userData.targetX - object.position.x) < 0.1 && 
+                        Math.abs(object.userData.targetY - object.position.y) < 0.1) {
+                        object.userData.targetX = undefined;
+                        object.userData.targetY = undefined;
+                    }
+                }
+                
+                // Apply rotating gravity (less strong when object is being controlled)
+                const gravityReduction = (selectedObject === object) ? 0.3 : 1.0;
+                object.userData.velocity.x += gravityX * gravityReduction;
+                object.userData.velocity.y += gravityY * gravityReduction;
                 
                 // Floating animation
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
@@ -293,8 +406,8 @@
                 object.rotation.z += object.userData.rotationSpeed * 0.3;
                 
                 // Schwerkraft zu den Rändern - dynamisch basierend auf Fenstergröße
-                const aspectRatio = window.innerWidth / window.innerHeight;
-                const maxX = 9 * aspectRatio;
+                const windowAspectRatio = window.innerWidth / window.innerHeight;
+                const maxX = 9 * windowAspectRatio;
                 const maxY = 6;
                 const edgeForce = 0.0002;
                 const dampening = 0.995;
