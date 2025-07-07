@@ -117,9 +117,9 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/5eurodoner_website.png', 
                 { x: 1, y: 2, scale: 5, rotationSpeed: -0.006, floatSpeed: 0.5, floatRange: 0.35, radius: 2.5 });
 
-            // Add solid schrift.png in the center (200% bigger and solid)
-            loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/schrift.png', 
-                { x: 0, y: 0, scale: 8, rotationSpeed: 0, floatSpeed: 0, floatRange: 0, radius: 4.0 });
+            // Add solid schrift.png in the center (smaller and completely static)
+            loadStaticImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/schrift.png', 
+                { x: 0, y: 0, scale: 3, zPosition: 0 });
 
             // Add DON.glb as floating 3D model
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON.glb', 
