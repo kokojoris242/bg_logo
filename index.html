@@ -109,21 +109,17 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
                 { x: -4, y: -4, scale: 9, rotationSpeed: 0.005, floatSpeed: 0.4, floatRange: 0.2, radius: 4.5 });
             
-            // Make pikachu card more visible - bigger and better positioned (reduced brightness)
+            // Make pikachu card more visible - 150% bigger and reduced brightness
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/pikauchu_karte_skiaggu.png', 
-                { x: 5, y: 1, scale: 4, rotationSpeed: -0.007, floatSpeed: 0.6, floatRange: 0.25, radius: 2.0 });
-            
-            // Add another pikachu card in different position (reduced brightness)
-            loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/pikauchu_karte_skiaggu.png', 
-                { x: -6, y: 1, scale: 3.5, rotationSpeed: 0.009, floatSpeed: 0.7, floatRange: 0.3, radius: 1.75 });
+                { x: 5, y: 1, scale: 6, rotationSpeed: -0.007, floatSpeed: 0.6, floatRange: 0.25, radius: 3.0 });
 
-            // Add Seurodoner website image (corrected filename)
+            // Add 5eurodoner website image (reduced brightness)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/5eurodoner_website.png', 
                 { x: 1, y: 2, scale: 5, rotationSpeed: -0.006, floatSpeed: 0.5, floatRange: 0.35, radius: 2.5 });
 
-            // Add static schrift.png in the center (bigger and static)
-            loadStaticImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/schrift.png', 
-                { x: 0, y: 0, scale: 4, zPosition: 0 });
+            // Add solid schrift.png in the center (200% bigger and solid)
+            loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/schrift.png', 
+                { x: 0, y: 0, scale: 8, rotationSpeed: 0, floatSpeed: 0, floatRange: 0, radius: 4.0 });
 
             // Add DON.glb as floating 3D model
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON.glb', 
@@ -199,9 +195,13 @@
                         side: THREE.DoubleSide
                     });
                     
-                    // Reduced brightness for Pikachu cards
+                    // Reduced brightness for specific images
                     if (url.includes('pikauchu_karte_skiaggu.png')) {
-                        material.color.setHSL(0, 0, 0.6); // Darker (0.6) instead of bright (0.9)
+                        material.color.setHSL(0, 0, 0.6); // Darker for Pikachu cards
+                    } else if (url.includes('5eurodoner_website.png')) {
+                        material.color.setHSL(0, 0, 0.5); // Even darker for 5eurodoner
+                    } else if (url.includes('schrift.png')) {
+                        material.color.setHSL(0, 0, 1.0); // Full brightness for schrift
                     } else {
                         // Normal brightness for other images
                         material.color.setHSL(0, 0, 0.9); // Heller (0.9) aber ungesättigt
