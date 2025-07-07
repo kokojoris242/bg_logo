@@ -440,10 +440,14 @@
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
                     object.userData.floatRange * 0.01;
                 
-                // Rotation
-                object.rotation.y += object.userData.rotationSpeed;
-                // Only rotate Z-axis for 3D models, not for images
-                if (object.userData.is3DModel !== false) {
+                // Rotation - different for images vs 3D models
+                if (object.geometry && object.geometry.type === 'PlaneGeometry') {
+                    // This is a PNG image - rotate on Y and X axes but not Z (no spinning)
+                    object.rotation.y += object.userData.rotationSpeed;
+                    object.rotation.x += object.userData.rotationSpeed * 0.5;
+                } else {
+                    // This is a 3D model - rotate on both Y and Z axes
+                    object.rotation.y += object.userData.rotationSpeed;
                     object.rotation.z += object.userData.rotationSpeed * 0.3;
                 }
                 
