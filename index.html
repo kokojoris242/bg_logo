@@ -1,6 +1,4 @@
-// Enable rendering without shadows
-                    model.traverse((child) => {
-                   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -115,6 +113,10 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/pikachu_karte_skitaggu.png', 
                 { x: 5, y: 1, scale: 4, rotationSpeed: -0.007, floatSpeed: 0.6, floatRange: 0.25, radius: 2.0 });
 
+            // Add DON.png as floating object
+            loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON.png', 
+                { x: 3, y: -5, scale: 7, rotationSpeed: 0.008, floatSpeed: 0.5, floatRange: 0.3, radius: 3.5 });
+
             // Mouse controls
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mousedown', onMouseDown);
@@ -151,9 +153,9 @@
                     
                     mesh.position.set(properties.x, properties.y, 0);
                     
-                    // Enable shadows
-                    mesh.castShadow = true;
-                    mesh.receiveShadow = true;
+                    // No shadows for images
+                    mesh.castShadow = false;
+                    mesh.receiveShadow = false;
                     
                     // Floating properties
                     mesh.userData = {
