@@ -139,6 +139,51 @@
             animate();
         }
 
+        function loadStaticImage(url, properties) {
+            const textureLoader = new THREE.TextureLoader();
+            
+            textureLoader.load(
+                url,
+                (texture) => {
+                    // Create plane geometry for the image
+                    const geometry = new THREE.PlaneGeometry(1, 1);
+                    const material = new THREE.MeshLambertMaterial({ 
+                        map: texture,
+                        transparent: true,
+                        alphaTest: 0.1,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    // Heller aber weniger gesättigt
+                    material.color.setHSL(0, 0, 0.9); // Heller (0.9) aber ungesättigt
+                    
+                    const mesh = new THREE.Mesh(geometry, material);
+                    
+                    // Scale based on image aspect ratio
+                    const imgAspectRatio = texture.image.width / texture.image.height;
+                    mesh.scale.set(properties.scale * imgAspectRatio, properties.scale, 1);
+                    
+                    mesh.position.set(properties.x, properties.y, properties.zPosition || 0);
+                    
+                    // No shadows for images
+                    mesh.castShadow = false;
+                    mesh.receiveShadow = false;
+                    
+                    // Mark as static - no floating properties, not added to objects array
+                    mesh.userData = {
+                        isStatic: true
+                    };
+                    
+                    // Add directly to scene but not to objects array (so it doesn't move)
+                    scene.add(mesh);
+                },
+                undefined,
+                (error) => {
+                    console.error('Error loading static image:', error);
+                }
+            );
+        }
+
         function loadFloatingImage(url, properties) {
             const textureLoader = new THREE.TextureLoader();
             
@@ -513,8 +558,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Subtle parallax effect basierend auf Index
-                object.position.z = Math.sin(time * 0.3 + index) * 0.5;
+                // Subtle parallax effect basierend auf Index - allow objects to move in front/behind schrift
+                object.position.z = Math.sin(time * 0.3 + index) * 2; // Increased range from 0.5 to 2
             });
             
             // Check for collisions between objects
