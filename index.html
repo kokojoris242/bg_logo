@@ -105,13 +105,13 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/maske.glb', 
                 { x: -2, y: -3, scale: 11, rotationSpeed: 0.009, floatSpeed: 0.8, floatRange: 0.3, radius: 3.6 });
 
-            // Load PNG images as floating textures - enhanced_replicate 300% bigger
+            // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
-                { x: -4, y: -4, scale: 9, rotationSpeed: 0.005, floatSpeed: 0.4, floatRange: 0.2, radius: 4.5 });
+                { x: -4, y: -4, scale: 9, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 4.5 });
             
-            // Make pikachu card more visible - 150% bigger and reduced brightness
+            // Make pikachu card more visible - 150% bigger and reduced brightness (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/pikauchu_karte_skiaggu.png', 
-                { x: 5, y: 1, scale: 6, rotationSpeed: -0.007, floatSpeed: 0.6, floatRange: 0.25, radius: 3.0 });
+                { x: 5, y: 1, scale: 6, rotationSpeed: 0, floatSpeed: 0.6, floatRange: 0.25, radius: 3.0 });
 
             // Add 5eurodoner website image (reduced brightness)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/5eurodoner_website.png', 
@@ -129,51 +129,6 @@
 
             // Animation
             animate();
-        }
-
-        function loadStaticImage(url, properties) {
-            const textureLoader = new THREE.TextureLoader();
-            
-            textureLoader.load(
-                url,
-                (texture) => {
-                    // Create plane geometry for the image
-                    const geometry = new THREE.PlaneGeometry(1, 1);
-                    const material = new THREE.MeshLambertMaterial({ 
-                        map: texture,
-                        transparent: true,
-                        alphaTest: 0.1,
-                        side: THREE.DoubleSide
-                    });
-                    
-                    // Normal brightness for static image
-                    material.color.setHSL(0, 0, 1.0); // Full brightness
-                    
-                    const mesh = new THREE.Mesh(geometry, material);
-                    
-                    // Scale based on image aspect ratio
-                    const imgAspectRatio = texture.image.width / texture.image.height;
-                    mesh.scale.set(properties.scale * imgAspectRatio, properties.scale, 1);
-                    
-                    mesh.position.set(properties.x, properties.y, properties.zPosition || 0);
-                    
-                    // No shadows for images
-                    mesh.castShadow = false;
-                    mesh.receiveShadow = false;
-                    
-                    // Mark as static - no floating properties, not added to objects array
-                    mesh.userData = {
-                        isStatic: true
-                    };
-                    
-                    // Add directly to scene but not to objects array (so it doesn't move)
-                    scene.add(mesh);
-                },
-                undefined,
-                (error) => {
-                    console.error('Error loading static image:', error);
-                }
-            );
         }
 
         function loadFloatingImage(url, properties) {
@@ -492,9 +447,8 @@
                 
                 // Rotation - different for images vs 3D models
                 if (object.geometry && object.geometry.type === 'PlaneGeometry') {
-                    // This is a PNG image - rotate on Y and X axes but not Z (no spinning)
-                    object.rotation.y += object.userData.rotationSpeed;
-                    object.rotation.x += object.userData.rotationSpeed * 0.5;
+                    // This is a PNG image - no rotation at all
+                    // Keep them facing forward, only allow 3D movement
                 } else {
                     // This is a 3D model - rotate on both Y and Z axes
                     object.rotation.y += object.userData.rotationSpeed;
