@@ -148,7 +148,7 @@
                     
                     // Reduced brightness for specific images
                     if (url.includes('pikauchu_karte_skiaggu.png')) {
-                        material.color.setHSL(0, 0, 0.6); // Darker for Pikachu cards
+                        material.color.setHSL(0, 0, 0.3); // Much darker for Pikachu cards
                     } else if (url.includes('5eurodoner_website.png')) {
                         material.color.setHSL(0, 0, 0.5); // Even darker for 5eurodoner
                     } else if (url.includes('enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png')) {
@@ -211,7 +211,10 @@
                                 
                                 // Special blue color for DON.glb
                                 if (url.includes('DON.glb')) {
-                                    child.material.color.setRGB(0, 0, 1); // Pure blue
+                                    child.material.color.setRGB(0.8, 0.9, 1); // Light blue chrome color
+                                    child.material.metalness = 1.0; // Fully metallic
+                                    child.material.roughness = 0.0; // Perfect mirror finish
+                                    child.material.envMapIntensity = 1.5; // Enhanced reflections
                                 } else {
                                     // Heller aber stark entsättigt for other models
                                     if (child.material.color) {
@@ -441,9 +444,13 @@
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
-                // Floating animation
+                // Floating animation with more scaling for depth effect
+                const scaleVariation = 1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.15;
+                object.scale.multiplyScalar(scaleVariation);
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
                     object.userData.floatRange * 0.01;
+                // Reset scale for next frame
+                object.scale.divideScalar(scaleVariation);
                 
                 // Rotation - different for images vs 3D models
                 if (object.geometry && object.geometry.type === 'PlaneGeometry') {
