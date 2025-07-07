@@ -96,6 +96,10 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/uludag.glb', 
                 { x: 0, y: 4, scale: 6.6, rotationSpeed: 0.006, floatSpeed: 0.6, floatRange: 0.35, radius: 2.2 });
 
+            // Add new maske.glb model
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/maske.glb', 
+                { x: -2, y: -3, scale: 5.5, rotationSpeed: 0.009, floatSpeed: 0.8, floatRange: 0.3, radius: 1.8 });
+
             // Load PNG images as floating textures - enhanced_replicate 300% bigger
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
                 { x: -4, y: -4, scale: 9, rotationSpeed: 0.005, floatSpeed: 0.4, floatRange: 0.2, radius: 4.5 });
@@ -175,16 +179,16 @@
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
-                            // Stark reduzierte Sättigung für sehr natürlichen Look
+                            // Heller aber ungesättigt für natürlichen Look
                             if (child.material) {
-                                child.material.metalness = 0.05; // Weniger metallisch
-                                child.material.roughness = 0.9; // Rauer, matter
-                                child.material.emissive = new THREE.Color(0x000000); // Kein Glühen
-                                // Starke Entsättigung
+                                child.material.metalness = 0.05; // Wenig metallisch
+                                child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
+                                child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
+                                // Heller aber stark entsättigt
                                 if (child.material.color) {
                                     const hsl = {};
                                     child.material.color.getHSL(hsl);
-                                    child.material.color.setHSL(hsl.h, hsl.s * 0.3, hsl.l * 0.8); // Noch weniger Sättigung
+                                    child.material.color.setHSL(hsl.h, hsl.s * 0.2, hsl.l * 1.1); // Weniger Sättigung, heller
                                 }
                             }
                         }
