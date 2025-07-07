@@ -121,9 +121,9 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/Seurodoner_website.png', 
                 { x: 1, y: 2, scale: 5, rotationSpeed: -0.006, floatSpeed: 0.5, floatRange: 0.35, radius: 2.5 });
 
-            // Add static schrift.png in the center (non-moving background)
-            loadStaticImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/schrift.png', 
-                { x: 0, y: 0, scale: 8, zPosition: 0 });
+            // Add schrift.png as solid object (90% smaller)
+            loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/schrift.png', 
+                { x: 0, y: 0, scale: 0.8, rotationSpeed: 0, floatSpeed: 0, floatRange: 0, radius: 2.0 });
 
             // Add DON.glb as floating 3D model
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON.glb', 
@@ -137,51 +137,6 @@
 
             // Animation
             animate();
-        }
-
-        function loadStaticImage(url, properties) {
-            const textureLoader = new THREE.TextureLoader();
-            
-            textureLoader.load(
-                url,
-                (texture) => {
-                    // Create plane geometry for the image
-                    const geometry = new THREE.PlaneGeometry(1, 1);
-                    const material = new THREE.MeshLambertMaterial({ 
-                        map: texture,
-                        transparent: true,
-                        alphaTest: 0.1,
-                        side: THREE.DoubleSide
-                    });
-                    
-                    // Heller aber weniger gesättigt
-                    material.color.setHSL(0, 0, 0.9); // Heller (0.9) aber ungesättigt
-                    
-                    const mesh = new THREE.Mesh(geometry, material);
-                    
-                    // Scale based on image aspect ratio
-                    const imgAspectRatio = texture.image.width / texture.image.height;
-                    mesh.scale.set(properties.scale * imgAspectRatio, properties.scale, 1);
-                    
-                    mesh.position.set(properties.x, properties.y, properties.zPosition || 0);
-                    
-                    // No shadows for images
-                    mesh.castShadow = false;
-                    mesh.receiveShadow = false;
-                    
-                    // Mark as static - no floating properties, not added to objects array
-                    mesh.userData = {
-                        isStatic: true
-                    };
-                    
-                    // Add directly to scene but not to objects array (so it doesn't move)
-                    scene.add(mesh);
-                },
-                undefined,
-                (error) => {
-                    console.error('Error loading static image:', error);
-                }
-            );
         }
 
         function loadFloatingImage(url, properties) {
