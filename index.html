@@ -121,6 +121,10 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/Seurodoner_website.png', 
                 { x: 1, y: 2, scale: 5, rotationSpeed: -0.006, floatSpeed: 0.5, floatRange: 0.35, radius: 2.5 });
 
+            // Add static schrift.png in the center (non-moving background)
+            loadStaticImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/schrift.png', 
+                { x: 0, y: 0, scale: 8, zPosition: 0 });
+
             // Add DON.glb as floating 3D model
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON.glb', 
                 { x: 3, y: -5, scale: 7, rotationSpeed: 0.008, floatSpeed: 0.5, floatRange: 0.3, radius: 3.5 });
