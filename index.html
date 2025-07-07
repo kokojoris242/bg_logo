@@ -203,11 +203,17 @@
                                 child.material.metalness = 0.05; // Wenig metallisch
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
-                                // Heller aber stark entsättigt
-                                if (child.material.color) {
-                                    const hsl = {};
-                                    child.material.color.getHSL(hsl);
-                                    child.material.color.setHSL(hsl.h, hsl.s * 0.2, hsl.l * 1.1); // Weniger Sättigung, heller
+                                
+                                // Special blue color for DON.glb
+                                if (url.includes('DON.glb')) {
+                                    child.material.color.setRGB(0, 0, 1); // Pure blue
+                                } else {
+                                    // Heller aber stark entsättigt for other models
+                                    if (child.material.color) {
+                                        const hsl = {};
+                                        child.material.color.getHSL(hsl);
+                                        child.material.color.setHSL(hsl.h, hsl.s * 0.2, hsl.l * 1.1); // Weniger Sättigung, heller
+                                    }
                                 }
                             }
                         }
