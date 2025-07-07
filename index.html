@@ -148,7 +148,7 @@
                     
                     // Reduced brightness for specific images
                     if (url.includes('pikauchu_karte_skiaggu.png')) {
-                        material.color.setHSL(0, 0, 0.3); // Much darker for Pikachu cards
+                        material.color.setHSL(0, 0, 0.4); // Brighter again for Pikachu cards
                     } else if (url.includes('5eurodoner_website.png')) {
                         material.color.setHSL(0, 0, 0.5); // Even darker for 5eurodoner
                     } else if (url.includes('enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png')) {
@@ -209,12 +209,13 @@
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
                                 
-                                // Special blue color for DON.glb
+                                // Special metallic finish for DON.glb
                                 if (url.includes('DON.glb')) {
-                                    child.material.color.setRGB(0.8, 0.9, 1); // Light blue chrome color
+                                    // Pure metallic chrome without color tint
                                     child.material.metalness = 1.0; // Fully metallic
                                     child.material.roughness = 0.0; // Perfect mirror finish
                                     child.material.envMapIntensity = 1.5; // Enhanced reflections
+                                    // Keep original color but make it metallic
                                 } else {
                                     // Heller aber stark entsättigt for other models
                                     if (child.material.color) {
