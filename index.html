@@ -105,8 +105,8 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/maske.glb', 
                 { x: -2, y: -3, scale: 11, rotationSpeed: 0.009, floatSpeed: 0.8, floatRange: 0.3, radius: 3.6 });
 
-            // Add kippe.glb model
-            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/kippe.glb', 
+            // Add tomate.glb model
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/tomate.glb', 
                 { x: -7, y: -1, scale: 5, rotationSpeed: 0.012, floatSpeed: 0.9, floatRange: 0.4, radius: 2.5 });
 
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
@@ -213,15 +213,15 @@
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
                                 
-                                // Special chrome mirror finish for DON.glb
+                                // Enhanced chrome finish for DON.glb - brighter, more reflective, glowing
                                 if (url.includes('DON.glb')) {
-                                    // Bright chrome - override any dark colors
-                                    child.material.color.setRGB(1.0, 1.0, 1.0); // Pure white base for maximum brightness
-                                    child.material.metalness = 0.9; // Very metallic but not completely
-                                    child.material.roughness = 0.1; // Slightly rough for realistic chrome
-                                    child.material.envMapIntensity = 3.0; // Very strong reflections
-                                    child.material.emissive.setRGB(0.2, 0.2, 0.2); // Add slight glow
-                                    // Ensure it's bright and chrome-like
+                                    // Bright chrome with enhanced properties
+                                    child.material.color.setRGB(1.2, 1.2, 1.2); // Even brighter than white
+                                    child.material.metalness = 1.0; // Fully metallic
+                                    child.material.roughness = 0.02; // Almost perfect mirror
+                                    child.material.envMapIntensity = 4.0; // Very strong reflections
+                                    child.material.emissive.setRGB(0.4, 0.4, 0.4); // Strong glow effect
+                                    // Remove any textures for pure chrome
                                     if (child.material.map) child.material.map = null;
                                 } else if (url.includes('x2_logo.glb')) {
                                     // Bright pink and reflective x2_logo
