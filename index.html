@@ -574,19 +574,20 @@
             mouse.x = mouseX;
             mouse.y = mouseY;
             
-            // If dragging, move the selected object
+            // If dragging, move the selected object immediately
             if (isDragging && selectedObject) {
-                // Convert mouse position to world coordinates
+                // Convert mouse position to world coordinates more accurately
                 raycaster.setFromCamera(mouse, camera);
                 const intersectPoint = raycaster.ray.origin.clone();
                 
-                // Smooth movement to mouse position
+                // Direct position control for better responsiveness
                 selectedObject.userData.targetX = intersectPoint.x;
                 selectedObject.userData.targetY = intersectPoint.y;
                 
-                // Reset velocity when manually controlling
-                selectedObject.userData.velocity.x *= 0.8;
-                selectedObject.userData.velocity.y *= 0.8;
+                // Immediately reduce physics interference
+                selectedObject.userData.velocity.x *= 0.1;
+                selectedObject.userData.velocity.y *= 0.1;
+                if (selectedObject.userData.velocityZ) selectedObject.userData.velocityZ *= 0.1;
             }
         }
 
@@ -594,16 +595,46 @@
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(objects, true);
+            // Find object at mouse position regardless of Z depth
+            let closestObject = null;
+            let closestDistance = Infinity;
             
-            if (intersects.length > 0) {
-                isDragging = true;
-                selectedObject = intersects[0].object;
+            // Convert mouse position to world coordinates
+            const worldPos = new THREE.Vector3();
+            worldPos.x = mouse.x * (camera.right - camera.left) / 2;
+            worldPos.y = mouse.y * (camera.top - camera.bottom) / 2;
+            
+            // Check all objects and find the closest one to the mouse in screen space
+            objects.forEach(object => {
+                // Project object position to screen space
+                const screenPos = object.position.clone();
+                screenPos.project(camera);
                 
-                // Find the root object if we hit a child mesh
-                while (selectedObject.parent && selectedObject.parent !== scene) {
-                    selectedObject = selectedObject.parent;
+                // Calculate distance from mouse position (ignoring Z)
+                const distance = Math.sqrt(
+                    Math.pow(screenPos.x - mouse.x, 2) + 
+                    Math.pow(screenPos.y - mouse.y, 2)
+                );
+                
+                // Check if click is within object bounds (considering its scale)
+                const currentScale = object.scale.x; // Use current scale
+                const radius = (object.userData.radius || 1) * currentScale * 0.01; // Adjust for screen space
+                
+                if (distance < radius && distance < closestDistance) {
+                    closestDistance = distance;
+                    closestObject = object;
+                }
+            });
+            
+            if (closestObject) {
+                isDragging = true;
+                selectedObject = closestObject;
+                
+                // Immediate control feedback
+                if (selectedObject.userData) {
+                    selectedObject.userData.velocity.x = 0;
+                    selectedObject.userData.velocity.y = 0;
+                    if (selectedObject.userData.velocityZ) selectedObject.userData.velocityZ = 0;
                 }
                 
                 // Visual feedback - slight scale up
@@ -632,31 +663,44 @@
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                 
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(objects, true);
+                // Find object at mouse position regardless of Z depth (same logic as onMouseDown)
+                let closestObject = null;
+                let closestDistance = Infinity;
                 
-                if (intersects.length > 0) {
-                    let clickedObject = intersects[0].object;
+                objects.forEach(object => {
+                    // Project object position to screen space
+                    const screenPos = object.position.clone();
+                    screenPos.project(camera);
                     
-                    // Find the root object
-                    while (clickedObject.parent && clickedObject.parent !== scene) {
-                        clickedObject = clickedObject.parent;
+                    // Calculate distance from mouse position (ignoring Z)
+                    const distance = Math.sqrt(
+                        Math.pow(screenPos.x - mouse.x, 2) + 
+                        Math.pow(screenPos.y - mouse.y, 2)
+                    );
+                    
+                    // Check if click is within object bounds
+                    const currentScale = object.scale.x;
+                    const radius = (object.userData.radius || 1) * currentScale * 0.01;
+                    
+                    if (distance < radius && distance < closestDistance) {
+                        closestDistance = distance;
+                        closestObject = object;
                     }
-                    
+                });
+                
+                if (closestObject && closestObject.userData) {
                     // Add impulse to clicked object
-                    if (clickedObject.userData) {
-                        const impulseStrength = 0.05;
-                        clickedObject.userData.velocity.x += (Math.random() - 0.5) * impulseStrength;
-                        clickedObject.userData.velocity.y += (Math.random() - 0.5) * impulseStrength;
-                        
-                        // Quick rotation impulse
-                        clickedObject.userData.rotationSpeed *= 2;
-                        setTimeout(() => {
-                            if (clickedObject.userData) {
-                                clickedObject.userData.rotationSpeed *= 0.5;
-                            }
-                        }, 1000);
-                    }
+                    const impulseStrength = 0.05;
+                    closestObject.userData.velocity.x += (Math.random() - 0.5) * impulseStrength;
+                    closestObject.userData.velocity.y += (Math.random() - 0.5) * impulseStrength;
+                    
+                    // Quick rotation impulse
+                    closestObject.userData.rotationSpeed *= 2;
+                    setTimeout(() => {
+                        if (closestObject.userData) {
+                            closestObject.userData.rotationSpeed *= 0.5;
+                        }
+                    }, 1000);
                 }
             }
         }
