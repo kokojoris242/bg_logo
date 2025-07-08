@@ -268,7 +268,7 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf5f5f5);
 
-            // Camera - Orthographic für 2D Look mit extremer Tiefe
+            // Camera - Orthographic with infinite depth range
             const aspect = window.innerWidth / window.innerHeight;
             const frustumSize = 20;
             camera = new THREE.OrthographicCamera(
@@ -276,8 +276,8 @@
                 frustumSize * aspect / 2, 
                 frustumSize / 2, 
                 frustumSize / -2, 
-                -30, // Much deeper near plane
-                20   // Forward far plane
+                -1000, // Very far back
+                1000   // Very far forward
             );
             camera.position.set(0, 0, 10);
 
@@ -333,10 +333,6 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/jacke.glb', 
                 { x: -5, y: 0, scale: 5, rotationSpeed: -0.009, floatSpeed: 0.8, floatRange: 0.35, radius: 2.5 });
 
-            // Add kase_weintraube.glb model
-            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/kase_weintraube.glb', 
-                { x: -3, y: 4, scale: 6, rotationSpeed: 0.008, floatSpeed: 0.6, floatRange: 0.3, radius: 3.0 });
-
             // Add MP4 video with green screen keying (50% bigger)
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/d9da7629-2231-48a6-9087-7074237fb446.mp4', 
                 { x: 2, y: -2, scale: 6, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 3.0 });
@@ -348,6 +344,10 @@
             // Add enhanced_replicate MP4 video with green screen keying (100% bigger)
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-k9xk34ece1rm80cqxa4txz72yc 2.mp4', 
                 { x: -1, y: -1, scale: 9, rotationSpeed: 0, floatSpeed: 0.5, floatRange: 0.25, radius: 4.5 });
+
+            // Add new MP4 video without keying
+            loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/047bc82c-85e5-48a2-ba99-8149fa10dfe2_video-enhanced (1).mp4', 
+                { x: 4, y: 3, scale: 5, rotationSpeed: 0, floatSpeed: 0.6, floatRange: 0.3, radius: 2.5 });
 
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
@@ -737,12 +737,8 @@
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
-                // Extreme scaling based on Z position for dramatic depth effect
-                const depthFactor = (object.position.z + 25) / 40; // Normalize Z position to 0-1 range
-                const depthScale = 0.3 + (depthFactor * 1.4); // Scale from 30% to 170% based on depth
-                
-                const scaleVariation = depthScale * (1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.2 + 
-                                      Math.cos(time * object.userData.floatSpeed * 0.3 + object.userData.floatOffset * 1.5) * 0.1);
+                // Regular floating animation with standard scaling
+                const scaleVariation = 1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.15;
                 object.scale.multiplyScalar(scaleVariation);
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
                     object.userData.floatRange * 0.01;
@@ -817,8 +813,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Infinite 3D depth movement - objects can move unlimited forward and backward
-                object.position.z = Math.sin(time * 0.3 + index) * 20 + Math.cos(time * 0.2 + index * 0.5) * 15 + Math.sin(time * 0.1 + index * 2) * 10;
+                // Simple 2D movement - objects stay on same plane
+                object.position.z = 0;
             });
             
             // Check for collisions between objects
