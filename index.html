@@ -671,34 +671,41 @@
                     
                     const dx = obj1.position.x - obj2.position.x;
                     const dy = obj1.position.y - obj2.position.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const dz = obj1.position.z - obj2.position.z;
+                    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz); // 3D distance
                     const minDistance = obj1.userData.radius + obj2.userData.radius;
                     
                     if (distance < minDistance && distance > 0) {
-                        // Collision detected - bounce objects
+                        // 3D collision detected - bounce objects in all dimensions
                         const overlap = minDistance - distance;
                         const separationX = (dx / distance) * overlap * 0.5;
                         const separationY = (dy / distance) * overlap * 0.5;
+                        const separationZ = (dz / distance) * overlap * 0.5;
                         
-                        // Separate objects
+                        // Separate objects in 3D space
                         obj1.position.x += separationX;
                         obj1.position.y += separationY;
+                        obj1.position.z = Math.max(0, obj1.position.z + separationZ); // Keep positive Z
                         obj2.position.x -= separationX;
                         obj2.position.y -= separationY;
+                        obj2.position.z = Math.max(0, obj2.position.z - separationZ); // Keep positive Z
                         
-                        // Calculate bounce velocities
+                        // Calculate 3D bounce velocities
                         const bounceStrength = 0.8;
-                        const relativeVelocityX = obj1.userData.velocity.x - obj2.userData.velocity.x;
-                        const relativeVelocityY = obj1.userData.velocity.y - obj2.userData.velocity.y;
-                        
-                        // Apply bounce
                         const bounceX = (dx / distance) * bounceStrength * 0.02;
                         const bounceY = (dy / distance) * bounceStrength * 0.02;
+                        const bounceZ = (dz / distance) * bounceStrength * 0.01; // Z-axis push effect
                         
+                        // Apply 3D bounce - objects can push each other forward
                         obj1.userData.velocity.x += bounceX;
                         obj1.userData.velocity.y += bounceY;
+                        if (!obj1.userData.velocityZ) obj1.userData.velocityZ = 0;
+                        obj1.userData.velocityZ += bounceZ;
+                        
                         obj2.userData.velocity.x -= bounceX;
                         obj2.userData.velocity.y -= bounceY;
+                        if (!obj2.userData.velocityZ) obj2.userData.velocityZ = 0;
+                        obj2.userData.velocityZ -= bounceZ;
                     }
                 }
             }
@@ -737,8 +744,15 @@
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
-                // Enhanced scaling for extreme foreground effect
-                const depthScale = 1 + (object.position.z * 0.05); // More dramatic scaling
+                // Apply Z-axis velocity and dampening for 3D pushing
+                if (object.userData.velocityZ) {
+                    object.position.z += object.userData.velocityZ;
+                    object.userData.velocityZ *= 0.99; // Dampen Z velocity
+                    object.position.z = Math.max(0, object.position.z); // Keep in foreground
+                }
+                
+                // Massive scaling for extreme foreground effect
+                const depthScale = 1 + (object.position.z * 0.005); // Very controlled scaling for 400 range
                 const scaleVariation = depthScale * (1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.15);
                 object.scale.multiplyScalar(scaleVariation);
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
@@ -814,8 +828,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Extreme 3D depth movement - objects can move very far into foreground (+100)
-                object.position.z = Math.abs(Math.sin(time * 0.3 + index) * 50 + Math.cos(time * 0.2 + index * 0.5) * 35 + Math.sin(time * 0.1 + index * 2) * 15);
+                // Extreme 3D depth movement - objects can move very far into foreground (+400)
+                object.position.z = Math.abs(Math.sin(time * 0.3 + index) * 200 + Math.cos(time * 0.2 + index * 0.5) * 150 + Math.sin(time * 0.1 + index * 2) * 50);
             });
             
             // Check for collisions between objects
