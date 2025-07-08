@@ -30,52 +30,66 @@
                 // Create plane geometry for the video
                 const geometry = new THREE.PlaneGeometry(1, 1);
                 
-                // Custom shader material for green screen keying
-                const material = new THREE.ShaderMaterial({
-                    uniforms: {
-                        map: { value: videoTexture },
-                        keyColor: { value: new THREE.Vector3(0.0, 1.0, 0.0) }, // Green color to key out
-                        threshold: { value: 0.4 }, // Threshold for keying
-                        smoothing: { value: 0.1 } // Smoothing for edges
-                    },
-                    vertexShader: `
-                        varying vec2 vUv;
-                        void main() {
-                            vUv = uv;
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                        }
-                    `,
-                    fragmentShader: `
-                        uniform sampler2D map;
-                        uniform vec3 keyColor;
-                        uniform float threshold;
-                        uniform float smoothing;
-                        varying vec2 vUv;
-                        
-                        void main() {
-                            // Crop the top portion by adjusting UV coordinates
-                            vec2 croppedUv = vUv;
-                            croppedUv.y = croppedUv.y * 0.85 + 0.1; // Crop top 10% and bottom 5%
-                            
-                            // Discard pixels outside the cropped area
-                            if (croppedUv.y > 0.95 || croppedUv.y < 0.1) {
-                                discard;
+                let material;
+                
+                // Check if this video needs green screen keying
+                const needsGreenScreen = url.includes('d9da7629-2231-48a6-9087-7074237fb446.mp4');
+                
+                if (needsGreenScreen) {
+                    // Custom shader material for green screen keying
+                    material = new THREE.ShaderMaterial({
+                        uniforms: {
+                            map: { value: videoTexture },
+                            keyColor: { value: new THREE.Vector3(0.0, 1.0, 0.0) }, // Green color to key out
+                            threshold: { value: 0.4 }, // Threshold for keying
+                            smoothing: { value: 0.1 } // Smoothing for edges
+                        },
+                        vertexShader: `
+                            varying vec2 vUv;
+                            void main() {
+                                vUv = uv;
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
                             }
+                        `,
+                        fragmentShader: `
+                            uniform sampler2D map;
+                            uniform vec3 keyColor;
+                            uniform float threshold;
+                            uniform float smoothing;
+                            varying vec2 vUv;
                             
-                            vec4 color = texture2D(map, croppedUv);
-                            
-                            // Calculate distance from key color (green)
-                            float distance = length(color.rgb - keyColor);
-                            
-                            // Create alpha mask based on distance from key color
-                            float alpha = smoothstep(threshold - smoothing, threshold + smoothing, distance);
-                            
-                            gl_FragColor = vec4(color.rgb, color.a * alpha);
-                        }
-                    `,
-                    transparent: true,
-                    side: THREE.DoubleSide
-                });
+                            void main() {
+                                // Crop the top portion by adjusting UV coordinates
+                                vec2 croppedUv = vUv;
+                                croppedUv.y = croppedUv.y * 0.85 + 0.1; // Crop top 10% and bottom 5%
+                                
+                                // Discard pixels outside the cropped area
+                                if (croppedUv.y > 0.95 || croppedUv.y < 0.1) {
+                                    discard;
+                                }
+                                
+                                vec4 color = texture2D(map, croppedUv);
+                                
+                                // Calculate distance from key color (green)
+                                float distance = length(color.rgb - keyColor);
+                                
+                                // Create alpha mask based on distance from key color
+                                float alpha = smoothstep(threshold - smoothing, threshold + smoothing, distance);
+                                
+                                gl_FragColor = vec4(color.rgb, color.a * alpha);
+                            }
+                        `,
+                        transparent: true,
+                        side: THREE.DoubleSide
+                    });
+                } else {
+                    // Regular video material without green screen keying
+                    material = new THREE.MeshLambertMaterial({
+                        map: videoTexture,
+                        transparent: true,
+                        side: THREE.DoubleSide
+                    });
+                }
                 
                 const mesh = new THREE.Mesh(geometry, material);
                 
@@ -313,6 +327,10 @@
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/d9da7629-2231-48a6-9087-7074237fb446.mp4', 
                 { x: 2, y: -2, scale: 6, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 3.0 });
 
+            // Add Professional Mode man in black suit MP4 video
+            loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/Professional_Mode_The_man_in_a_black_suit_stands_i.mp4', 
+                { x: 0, y: 4, scale: 5, rotationSpeed: 0, floatSpeed: 0.6, floatRange: 0.35, radius: 2.5 });
+
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
                 { x: -4, y: -4, scale: 9, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 4.5 });
@@ -325,8 +343,8 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/5eurodoner_website.png', 
                 { x: 1, y: 2, scale: 6, rotationSpeed: 0, floatSpeed: 0.5, floatRange: 0.35, radius: 3.0 });
 
-            // Add DON2glb.glb as floating 3D model (replacing DON.glb)
-            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON2glb.glb', 
+            // Add DON3.glb as floating 3D model (replacing DON2glb.glb)
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON3.glb', 
                 { x: 3, y: -5, scale: 7, rotationSpeed: 0.008, floatSpeed: 0.5, floatRange: 0.3, radius: 3.5 });
 
             // Mouse controls
@@ -417,8 +435,8 @@
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
                                 
-                                // Enhanced yellow finish for DON2glb.glb with roughness
-                                if (url.includes('DON2glb.glb')) {
+                                // Enhanced yellow finish for DON3.glb with roughness
+                                if (url.includes('DON3.glb')) {
                                     // Force bright yellow color and override any existing materials
                                     if (child.material.color) {
                                         child.material.color.setRGB(1.0, 1.0, 0.0); // Pure RGB yellow
