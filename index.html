@@ -268,7 +268,7 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf5f5f5);
 
-            // Camera - Orthographic für 2D Look
+            // Camera - Orthographic für 2D Look mit mehr Tiefe
             const aspect = window.innerWidth / window.innerHeight;
             const frustumSize = 20;
             camera = new THREE.OrthographicCamera(
@@ -276,8 +276,8 @@
                 frustumSize * aspect / 2, 
                 frustumSize / 2, 
                 frustumSize / -2, 
-                -1000, 
-                1000
+                -20, // Increased near plane for more depth
+                20   // Increased far plane for more depth
             );
             camera.position.set(0, 0, 10);
 
@@ -743,8 +743,9 @@
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
-                // Floating animation with more scaling for depth effect
-                const scaleVariation = 1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.15;
+                // Enhanced floating animation with more dramatic scaling for depth effect
+                const scaleVariation = 1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.25 + 
+                                      Math.cos(time * object.userData.floatSpeed * 0.3 + object.userData.floatOffset * 1.5) * 0.15;
                 object.scale.multiplyScalar(scaleVariation);
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
                     object.userData.floatRange * 0.01;
@@ -819,8 +820,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Subtle parallax effect basierend auf Index - allow objects to move in front/behind with more depth
-                object.position.z = Math.sin(time * 0.3 + index) * 3 + Math.cos(time * 0.2 + index * 0.5) * 1.5;
+                // Enhanced 3D depth movement - objects move dramatically forward and backward
+                object.position.z = Math.sin(time * 0.3 + index) * 8 + Math.cos(time * 0.2 + index * 0.5) * 5 + Math.sin(time * 0.1 + index * 2) * 3;
             });
             
             // Check for collisions between objects
