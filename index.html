@@ -268,7 +268,7 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xf5f5f5);
 
-            // Camera - Orthographic für 2D Look mit mehr Tiefe
+            // Camera - Orthographic für 2D Look mit extremer Tiefe
             const aspect = window.innerWidth / window.innerHeight;
             const frustumSize = 20;
             camera = new THREE.OrthographicCamera(
@@ -276,8 +276,8 @@
                 frustumSize * aspect / 2, 
                 frustumSize / 2, 
                 frustumSize / -2, 
-                -20, // Increased near plane for more depth
-                20   // Increased far plane for more depth
+                -30, // Much deeper near plane
+                20   // Forward far plane
             );
             camera.position.set(0, 0, 10);
 
@@ -361,8 +361,8 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/5eurodoner_website.png', 
                 { x: 1, y: 2, scale: 6, rotationSpeed: 0, floatSpeed: 0.5, floatRange: 0.35, radius: 3.0 });
 
-            // Add DON3.glb as floating 3D model (replacing DON2glb.glb)
-            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON3.glb', 
+            // Add DON4.glb as floating 3D model (replacing DON3.glb)
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON4.glb', 
                 { x: 3, y: -5, scale: 7, rotationSpeed: 0.008, floatSpeed: 0.5, floatRange: 0.3, radius: 3.5 });
 
             // Mouse controls
@@ -492,12 +492,6 @@
                                     child.material.roughness = 0.2; // Slightly rough for realism
                                     child.material.envMapIntensity = 2.0; // Strong reflections
                                     child.material.emissive.setRGB(0.1, 0.0, 0.05); // Slight pink glow
-                                } else if (url.includes('DON3.glb')) {
-                                    // White with 100% metallic finish for DON3.glb
-                                    child.material.color.setRGB(1.0, 1.0, 1.0); // Pure white
-                                    child.material.metalness = 1.0; // 100% metallic
-                                    child.material.roughness = 0.1; // Low roughness for mirror-like finish
-                                    child.material.envMapIntensity = 2.0; // Strong reflections
                                 } else if (url.includes('stone_logo.glb')) {
                                     // Stone logo - natural stone appearance
                                     if (child.material.color) {
@@ -823,11 +817,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Extreme 3D depth movement - objects move very far forward and backward
-                const baseZ = Math.sin(time * 0.3 + index) * 15 + Math.cos(time * 0.2 + index * 0.5) * 10 + Math.sin(time * 0.1 + index * 2) * 8;
-                
-                // Constrain Z position to prevent clipping with walls/background
-                object.position.z = Math.max(-25, Math.min(15, baseZ));
+                // Infinite 3D depth movement - objects can move unlimited forward and backward
+                object.position.z = Math.sin(time * 0.3 + index) * 20 + Math.cos(time * 0.2 + index * 0.5) * 15 + Math.sin(time * 0.1 + index * 2) * 10;
             });
             
             // Check for collisions between objects
