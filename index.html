@@ -282,8 +282,8 @@
             light4.position.set(-1, 1, -1);
             scene.add(light4);
 
-            // Load Models mit floating properties - x2_logo 150% bigger (7.5 * 1.5 = 11.25)
-            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/x2_logo.glb', 
+            // Load Models mit floating properties - stone_logo 150% bigger (replacing x2_logo)
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/stone_logo.glb', 
                 { x: -8, y: 3, scale: 11.25, rotationSpeed: 0.01, floatSpeed: 0.5, floatRange: 0.3, radius: 3.75 });
             
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/buch.glb', 
@@ -304,13 +304,17 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/haase.glb', 
                 { x: 8, y: -3, scale: 5.2, rotationSpeed: -0.010, floatSpeed: 0.7, floatRange: 0.35, radius: 2.6 });
 
+            // Add jacke.glb model
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/jacke.glb', 
+                { x: -5, y: 0, scale: 5, rotationSpeed: -0.009, floatSpeed: 0.8, floatRange: 0.35, radius: 2.5 });
+
             // Add kase_weintraube.glb model
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/kase_weintraube.glb', 
                 { x: -3, y: 4, scale: 6, rotationSpeed: 0.008, floatSpeed: 0.6, floatRange: 0.3, radius: 3.0 });
 
-            // Add MP4 video with green screen keying
+            // Add MP4 video with green screen keying (50% bigger)
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/d9da7629-2231-48a6-9087-7074237fb446.mp4', 
-                { x: 2, y: -2, scale: 4, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 2.0 });
+                { x: 2, y: -2, scale: 6, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 3.0 });
 
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
@@ -416,8 +420,8 @@
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
                                 
-                                // Enhanced yellow finish for DON.glb with roughness
-                                if (url.includes('DON.glb')) {
+                                // Enhanced yellow finish for DON2glb.glb with roughness
+                                if (url.includes('DON2glb.glb')) {
                                     // Force bright yellow color and override any existing materials
                                     if (child.material.color) {
                                         child.material.color.setRGB(1.0, 1.0, 0.0); // Pure RGB yellow
@@ -455,6 +459,15 @@
                                     child.material.roughness = 0.2; // Slightly rough for realism
                                     child.material.envMapIntensity = 2.0; // Strong reflections
                                     child.material.emissive.setRGB(0.1, 0.0, 0.05); // Slight pink glow
+                                } else if (url.includes('stone_logo.glb')) {
+                                    // Stone logo - natural stone appearance
+                                    if (child.material.color) {
+                                        const hsl = {};
+                                        child.material.color.getHSL(hsl);
+                                        child.material.color.setHSL(hsl.h, hsl.s * 0.6, hsl.l * 1.1); // Slightly desaturated, brighter
+                                    }
+                                    child.material.metalness = 0.1; // Low metalness for stone
+                                    child.material.roughness = 0.8; // High roughness for stone texture
                                 } else if (url.includes('kase_weintraube.glb')) {
                                     // Reduce saturation but keep brightness for kase_weintraube
                                     if (child.material.color) {
