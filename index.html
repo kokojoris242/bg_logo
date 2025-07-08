@@ -43,7 +43,8 @@
                             map: { value: videoTexture },
                             keyColor: { value: new THREE.Vector3(0.0, 1.0, 0.0) }, // Green color to key out
                             threshold: { value: 0.4 }, // Threshold for keying
-                            smoothing: { value: 0.1 } // Smoothing for edges
+                            smoothing: { value: 0.1 }, // Smoothing for edges
+                            videoType: { value: url.includes('d9da7629-2231-48a6-9087-7074237fb446.mp4') ? 1.0 : 2.0 } // 1.0 for Lego, 2.0 for enhanced_replicate
                         },
                         vertexShader: `
                             varying vec2 vUv;
@@ -57,16 +58,28 @@
                             uniform vec3 keyColor;
                             uniform float threshold;
                             uniform float smoothing;
+                            uniform float videoType;
                             varying vec2 vUv;
                             
                             void main() {
-                                // Crop the top portion by adjusting UV coordinates
                                 vec2 croppedUv = vUv;
-                                croppedUv.y = croppedUv.y * 0.85 + 0.1; // Crop top 10% and bottom 5%
                                 
-                                // Discard pixels outside the cropped area
-                                if (croppedUv.y > 0.95 || croppedUv.y < 0.1) {
-                                    discard;
+                                if (videoType < 1.5) {
+                                    // For Lego video - crop more from top (30px equivalent)
+                                    croppedUv.y = croppedUv.y * 0.75 + 0.15; // Crop top 15% and bottom 10%
+                                    
+                                    // Discard pixels outside the cropped area
+                                    if (croppedUv.y > 0.9 || croppedUv.y < 0.15) {
+                                        discard;
+                                    }
+                                } else {
+                                    // For enhanced_replicate video - crop bottom to remove black bar
+                                    croppedUv.y = croppedUv.y * 0.9; // Crop bottom 10%
+                                    
+                                    // Discard pixels outside the cropped area
+                                    if (croppedUv.y > 0.9) {
+                                        discard;
+                                    }
                                 }
                                 
                                 vec4 color = texture2D(map, croppedUv);
@@ -479,6 +492,12 @@
                                     child.material.roughness = 0.2; // Slightly rough for realism
                                     child.material.envMapIntensity = 2.0; // Strong reflections
                                     child.material.emissive.setRGB(0.1, 0.0, 0.05); // Slight pink glow
+                                } else if (url.includes('DON3.glb')) {
+                                    // White with 100% metallic finish for DON3.glb
+                                    child.material.color.setRGB(1.0, 1.0, 1.0); // Pure white
+                                    child.material.metalness = 1.0; // 100% metallic
+                                    child.material.roughness = 0.1; // Low roughness for mirror-like finish
+                                    child.material.envMapIntensity = 2.0; // Strong reflections
                                 } else if (url.includes('stone_logo.glb')) {
                                     // Stone logo - natural stone appearance
                                     if (child.material.color) {
