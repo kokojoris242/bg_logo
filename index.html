@@ -616,9 +616,9 @@
                     Math.pow(screenPos.y - mouse.y, 2)
                 );
                 
-                // Check if click is within object bounds (considering its scale)
+                // Check if click is within object bounds (considering its scale) - increased range
                 const currentScale = object.scale.x; // Use current scale
-                const radius = (object.userData.radius || 1) * currentScale * 0.01; // Adjust for screen space
+                const radius = (object.userData.radius || 1) * currentScale * 0.05; // Increased from 0.01 to 0.05
                 
                 if (distance < radius && distance < closestDistance) {
                     closestDistance = distance;
@@ -678,9 +678,9 @@
                         Math.pow(screenPos.y - mouse.y, 2)
                     );
                     
-                    // Check if click is within object bounds
+                    // Check if click is within object bounds - increased range
                     const currentScale = object.scale.x;
-                    const radius = (object.userData.radius || 1) * currentScale * 0.01;
+                    const radius = (object.userData.radius || 1) * currentScale * 0.05; // Increased from 0.01 to 0.05
                     
                     if (distance < radius && distance < closestDistance) {
                         closestDistance = distance;
