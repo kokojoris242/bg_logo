@@ -105,9 +105,13 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/maske.glb', 
                 { x: -2, y: -3, scale: 11, rotationSpeed: 0.009, floatSpeed: 0.8, floatRange: 0.3, radius: 3.6 });
 
-            // Add tomate.glb model
+            // Add tomate.glb model (50% bigger)
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/tomate.glb', 
-                { x: -7, y: -1, scale: 5, rotationSpeed: 0.012, floatSpeed: 0.9, floatRange: 0.4, radius: 2.5 });
+                { x: -7, y: -1, scale: 7.5, rotationSpeed: 0.012, floatSpeed: 0.9, floatRange: 0.4, radius: 3.75 });
+
+            // Add haase.glb model
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/haase.glb', 
+                { x: 8, y: -3, scale: 4, rotationSpeed: -0.010, floatSpeed: 0.7, floatRange: 0.35, radius: 2.0 });
 
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
@@ -213,23 +217,23 @@
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
                                 
-                                // Enhanced chrome finish for DON.glb - brighter, more reflective, glowing
+                                // Enhanced chrome finish for DON.glb - RGB yellow with reflections
                                 if (url.includes('DON.glb')) {
-                                    // Bright chrome with enhanced properties
-                                    child.material.color.setRGB(1.2, 1.2, 1.2); // Even brighter than white
+                                    // Bright yellow chrome with enhanced properties
+                                    child.material.color.setRGB(1.0, 1.0, 0.0); // Pure RGB yellow
                                     child.material.metalness = 1.0; // Fully metallic
                                     child.material.roughness = 0.02; // Almost perfect mirror
                                     child.material.envMapIntensity = 4.0; // Very strong reflections
-                                    child.material.emissive.setRGB(0.4, 0.4, 0.4); // Strong glow effect
+                                    child.material.emissive.setRGB(0.2, 0.2, 0.0); // Yellow glow effect
                                     // Remove any textures for pure chrome
                                     if (child.material.map) child.material.map = null;
                                 } else if (url.includes('x2_logo.glb')) {
-                                    // Bright pink and reflective x2_logo
-                                    child.material.color.setRGB(1.0, 0.4, 0.8); // Bright pink
+                                    // RGB pink and reflective x2_logo
+                                    child.material.color.setRGB(1.0, 0.0, 1.0); // Pure RGB pink (magenta)
                                     child.material.metalness = 0.8; // Very metallic
                                     child.material.roughness = 0.2; // Slightly rough for realism
                                     child.material.envMapIntensity = 2.0; // Strong reflections
-                                    child.material.emissive.setRGB(0.1, 0.02, 0.05); // Slight pink glow
+                                    child.material.emissive.setRGB(0.1, 0.0, 0.1); // Slight pink glow
                                 } else {
                                     // Heller aber stark entsättigt for other models
                                     if (child.material.color) {
