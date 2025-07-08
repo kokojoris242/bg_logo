@@ -11,6 +11,97 @@
             box-sizing: border-box;
         }
 
+        function loadFloatingVideo(url, properties) {
+            // Create video element
+            const video = document.createElement('video');
+            video.src = url;
+            video.crossOrigin = 'anonymous';
+            video.loop = true;
+            video.muted = true;
+            video.autoplay = true;
+            video.playsInline = true;
+            
+            video.addEventListener('loadeddata', () => {
+                // Create video texture
+                const videoTexture = new THREE.VideoTexture(video);
+                videoTexture.minFilter = THREE.LinearFilter;
+                videoTexture.magFilter = THREE.LinearFilter;
+                
+                // Create plane geometry for the video
+                const geometry = new THREE.PlaneGeometry(1, 1);
+                
+                // Custom shader material for green screen keying
+                const material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        map: { value: videoTexture },
+                        keyColor: { value: new THREE.Vector3(0.0, 1.0, 0.0) }, // Green color to key out
+                        threshold: { value: 0.4 }, // Threshold for keying
+                        smoothing: { value: 0.1 } // Smoothing for edges
+                    },
+                    vertexShader: `
+                        varying vec2 vUv;
+                        void main() {
+                            vUv = uv;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D map;
+                        uniform vec3 keyColor;
+                        uniform float threshold;
+                        uniform float smoothing;
+                        varying vec2 vUv;
+                        
+                        void main() {
+                            vec4 color = texture2D(map, vUv);
+                            
+                            // Calculate distance from key color (green)
+                            float distance = length(color.rgb - keyColor);
+                            
+                            // Create alpha mask based on distance from key color
+                            float alpha = smoothstep(threshold - smoothing, threshold + smoothing, distance);
+                            
+                            gl_FragColor = vec4(color.rgb, color.a * alpha);
+                        }
+                    `,
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                // Scale based on video aspect ratio
+                const videoAspectRatio = video.videoWidth / video.videoHeight;
+                mesh.scale.set(properties.scale * videoAspectRatio, properties.scale, 1);
+                
+                mesh.position.set(properties.x, properties.y, 0);
+                
+                // No shadows for video
+                mesh.castShadow = false;
+                mesh.receiveShadow = false;
+                
+                // Floating properties
+                mesh.userData = {
+                    ...properties,
+                    initialY: properties.y,
+                    floatOffset: Math.random() * Math.PI * 2,
+                    velocity: { x: (Math.random() - 0.5) * 0.02, y: (Math.random() - 0.5) * 0.02 },
+                    mass: 0.9,
+                    isVideo: true
+                };
+                
+                objects.push(mesh);
+                scene.add(mesh);
+                
+                // Start video playback
+                video.play().catch(console.error);
+            });
+            
+            video.addEventListener('error', (error) => {
+                console.error('Error loading video:', error);
+            });
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f5f5;
@@ -116,6 +207,10 @@
             // Add kase_weintraube.glb model
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/kase_weintraube.glb', 
                 { x: -3, y: 4, scale: 6, rotationSpeed: 0.008, floatSpeed: 0.6, floatRange: 0.3, radius: 3.0 });
+
+            // Add MP4 video with green screen keying
+            loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/d9da7629-2231-48a6-9087-7074237fb446.mp4', 
+                { x: 2, y: -2, scale: 4, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 2.0 });
 
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
@@ -260,6 +355,13 @@
                                     child.material.roughness = 0.2; // Slightly rough for realism
                                     child.material.envMapIntensity = 2.0; // Strong reflections
                                     child.material.emissive.setRGB(0.1, 0.0, 0.05); // Slight pink glow
+                                } else if (url.includes('kase_weintraube.glb')) {
+                                    // Reduce saturation but keep brightness for kase_weintraube
+                                    if (child.material.color) {
+                                        const hsl = {};
+                                        child.material.color.getHSL(hsl);
+                                        child.material.color.setHSL(hsl.h, hsl.s * 0.4, hsl.l); // Reduce saturation to 40% of original, keep lightness
+                                    }
                                 } else {
                                     // Heller aber stark entsättigt for other models
                                     if (child.material.color) {
