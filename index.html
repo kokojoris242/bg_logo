@@ -109,9 +109,13 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/tomate.glb', 
                 { x: -7, y: -1, scale: 7.5, rotationSpeed: 0.012, floatSpeed: 0.9, floatRange: 0.4, radius: 3.75 });
 
-            // Add haase.glb model
+            // Add haase.glb model (30% bigger)
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/haase.glb', 
-                { x: 8, y: -3, scale: 4, rotationSpeed: -0.010, floatSpeed: 0.7, floatRange: 0.35, radius: 2.0 });
+                { x: 8, y: -3, scale: 5.2, rotationSpeed: -0.010, floatSpeed: 0.7, floatRange: 0.35, radius: 2.6 });
+
+            // Add kase_weintraube.glb model
+            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/kase_weintraube.glb', 
+                { x: -3, y: 4, scale: 6, rotationSpeed: 0.008, floatSpeed: 0.6, floatRange: 0.3, radius: 3.0 });
 
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
@@ -217,23 +221,45 @@
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
                                 
-                                // Enhanced chrome finish for DON.glb - RGB yellow with reflections
+                                // Enhanced yellow finish for DON.glb with roughness
                                 if (url.includes('DON.glb')) {
-                                    // Bright yellow chrome with enhanced properties
-                                    child.material.color.setRGB(1.0, 1.0, 0.0); // Pure RGB yellow
-                                    child.material.metalness = 1.0; // Fully metallic
-                                    child.material.roughness = 0.02; // Almost perfect mirror
-                                    child.material.envMapIntensity = 4.0; // Very strong reflections
-                                    child.material.emissive.setRGB(0.2, 0.2, 0.0); // Yellow glow effect
-                                    // Remove any textures for pure chrome
-                                    if (child.material.map) child.material.map = null;
+                                    // Force bright yellow color and override any existing materials
+                                    if (child.material.color) {
+                                        child.material.color.setRGB(1.0, 1.0, 0.0); // Pure RGB yellow
+                                    }
+                                    // Create new material if needed to ensure yellow shows
+                                    if (!child.material.color || child.material.color.r !== 1.0) {
+                                        child.material = new THREE.MeshStandardMaterial({
+                                            color: new THREE.Color(1.0, 1.0, 0.0),
+                                            metalness: 0.8,
+                                            roughness: 0.3, // More roughness for realistic look
+                                            envMapIntensity: 3.0,
+                                            emissive: new THREE.Color(0.1, 0.1, 0.0)
+                                        });
+                                    }
+                                    child.material.metalness = 0.8; // Metallic but not perfect mirror
+                                    child.material.roughness = 0.3; // More roughness for realistic surface
+                                    child.material.envMapIntensity = 3.0; // Strong reflections
+                                    child.material.emissive.setRGB(0.1, 0.1, 0.0); // Subtle yellow glow
                                 } else if (url.includes('x2_logo.glb')) {
-                                    // RGB pink and reflective x2_logo
-                                    child.material.color.setRGB(1.0, 0.0, 1.0); // Pure RGB pink (magenta)
+                                    // Pink metallic x2_logo - force pink color
+                                    if (child.material.color) {
+                                        child.material.color.setRGB(1.0, 0.2, 0.8); // Bright pink
+                                    }
+                                    // Create new material if needed to ensure pink shows
+                                    if (!child.material.color || child.material.color.g > 0.3) {
+                                        child.material = new THREE.MeshStandardMaterial({
+                                            color: new THREE.Color(1.0, 0.2, 0.8),
+                                            metalness: 0.8,
+                                            roughness: 0.2,
+                                            envMapIntensity: 2.0,
+                                            emissive: new THREE.Color(0.1, 0.0, 0.05)
+                                        });
+                                    }
                                     child.material.metalness = 0.8; // Very metallic
                                     child.material.roughness = 0.2; // Slightly rough for realism
                                     child.material.envMapIntensity = 2.0; // Strong reflections
-                                    child.material.emissive.setRGB(0.1, 0.0, 0.1); // Slight pink glow
+                                    child.material.emissive.setRGB(0.1, 0.0, 0.05); // Slight pink glow
                                 } else {
                                     // Heller aber stark entsättigt for other models
                                     if (child.material.color) {
