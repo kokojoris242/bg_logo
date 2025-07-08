@@ -53,7 +53,16 @@
                         varying vec2 vUv;
                         
                         void main() {
-                            vec4 color = texture2D(map, vUv);
+                            // Crop the top portion by adjusting UV coordinates
+                            vec2 croppedUv = vUv;
+                            croppedUv.y = croppedUv.y * 0.85 + 0.1; // Crop top 10% and bottom 5%
+                            
+                            // Discard pixels outside the cropped area
+                            if (croppedUv.y > 0.95 || croppedUv.y < 0.1) {
+                                discard;
+                            }
+                            
+                            vec4 color = texture2D(map, croppedUv);
                             
                             // Calculate distance from key color (green)
                             float distance = length(color.rgb - keyColor);
