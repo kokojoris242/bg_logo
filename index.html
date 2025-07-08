@@ -33,7 +33,8 @@
                 let material;
                 
                 // Check if this video needs green screen keying
-                const needsGreenScreen = url.includes('d9da7629-2231-48a6-9087-7074237fb446.mp4');
+                const needsGreenScreen = url.includes('d9da7629-2231-48a6-9087-7074237fb446.mp4') || 
+                                       url.includes('enhanced_replicate-prediction-k9xk34ece1rm80cqxa4txz72yc 2.mp4');
                 
                 if (needsGreenScreen) {
                     // Custom shader material for green screen keying
@@ -330,6 +331,10 @@
             // Add Professional Mode man in black suit MP4 video
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/Professional_Mode_The_man_in_a_black_suit_stands_i.mp4', 
                 { x: 0, y: 4, scale: 5, rotationSpeed: 0, floatSpeed: 0.6, floatRange: 0.35, radius: 2.5 });
+
+            // Add enhanced_replicate MP4 video with green screen keying (100% bigger)
+            loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-k9xk34ece1rm80cqxa4txz72yc 2.mp4', 
+                { x: -1, y: -1, scale: 9, rotationSpeed: 0, floatSpeed: 0.5, floatRange: 0.25, radius: 4.5 });
 
             // Load PNG images as floating textures - enhanced_replicate 300% bigger (no rotation)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-77a5mxf72hrmc0cqthz8p2tqvg.png', 
