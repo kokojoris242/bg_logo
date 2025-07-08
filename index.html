@@ -288,9 +288,6 @@
             
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/buch.glb', 
                 { x: 6, y: -2, scale: 6, rotationSpeed: -0.008, floatSpeed: 0.7, floatRange: 0.4, radius: 2.0 });
-            
-            loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/uludag.glb', 
-                { x: 0, y: 4, scale: 6.6, rotationSpeed: 0.006, floatSpeed: 0.6, floatRange: 0.35, radius: 2.2 });
 
             // Add new maske.glb model - 200% bigger
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/maske.glb', 
@@ -496,8 +493,8 @@
                     model.scale.multiplyScalar(scale);
                     model.position.set(properties.x, properties.y, 0);
                     
-                    // Special rotation für x2_logo
-                    if (url.includes('x2_logo')) {
+                    // Special rotation für stone_logo
+                    if (url.includes('stone_logo.glb')) {
                         model.rotation.x = -Math.PI / 2;
                     }
                     
