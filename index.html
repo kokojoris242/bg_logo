@@ -113,9 +113,9 @@
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/pikauchu_karte_skiaggu.png', 
                 { x: 5, y: 1, scale: 6, rotationSpeed: 0, floatSpeed: 0.6, floatRange: 0.25, radius: 3.0 });
 
-            // Add 5eurodoner website image (reduced brightness)
+            // Add 5eurodoner website image (reduced brightness, 20% bigger)
             loadFloatingImage('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/5eurodoner_website.png', 
-                { x: 1, y: 2, scale: 5, rotationSpeed: 0, floatSpeed: 0.5, floatRange: 0.35, radius: 2.5 });
+                { x: 1, y: 2, scale: 6, rotationSpeed: 0, floatSpeed: 0.5, floatRange: 0.35, radius: 3.0 });
 
             // Add DON.glb as floating 3D model
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/DON.glb', 
@@ -209,13 +209,23 @@
                                 child.material.roughness = 0.8; // Etwas weniger rau für mehr Licht
                                 child.material.emissive = new THREE.Color(0x000000); // Kein künstliches Glühen
                                 
-                                // Special metallic finish for DON.glb
+                                // Special chrome mirror finish for DON.glb
                                 if (url.includes('DON.glb')) {
-                                    // Pure metallic chrome without color tint
-                                    child.material.metalness = 1.0; // Fully metallic
-                                    child.material.roughness = 0.0; // Perfect mirror finish
-                                    child.material.envMapIntensity = 1.5; // Enhanced reflections
-                                    // Keep original color but make it metallic
+                                    // Bright chrome - override any dark colors
+                                    child.material.color.setRGB(1.0, 1.0, 1.0); // Pure white base for maximum brightness
+                                    child.material.metalness = 0.9; // Very metallic but not completely
+                                    child.material.roughness = 0.1; // Slightly rough for realistic chrome
+                                    child.material.envMapIntensity = 3.0; // Very strong reflections
+                                    child.material.emissive.setRGB(0.2, 0.2, 0.2); // Add slight glow
+                                    // Ensure it's bright and chrome-like
+                                    if (child.material.map) child.material.map = null;
+                                } else if (url.includes('x2_logo.glb')) {
+                                    // Bright pink and reflective x2_logo
+                                    child.material.color.setRGB(1.0, 0.4, 0.8); // Bright pink
+                                    child.material.metalness = 0.8; // Very metallic
+                                    child.material.roughness = 0.2; // Slightly rough for realism
+                                    child.material.envMapIntensity = 2.0; // Strong reflections
+                                    child.material.emissive.setRGB(0.1, 0.02, 0.05); // Slight pink glow
                                 } else {
                                     // Heller aber stark entsättigt for other models
                                     if (child.material.color) {
