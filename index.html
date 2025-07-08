@@ -65,19 +65,19 @@
                                 vec2 croppedUv = vUv;
                                 
                                 if (videoType < 1.5) {
-                                    // For Lego video - crop additional 20px from top
-                                    croppedUv.y = croppedUv.y * 0.7 + 0.2; // Crop top 20% and bottom 10%
+                                    // For Lego video - crop 20px more from top
+                                    croppedUv.y = croppedUv.y * 0.65 + 0.25; // Crop top 25% and bottom 10%
                                     
                                     // Discard pixels outside the cropped area
-                                    if (croppedUv.y > 0.9 || croppedUv.y < 0.2) {
+                                    if (croppedUv.y > 0.9 || croppedUv.y < 0.25) {
                                         discard;
                                     }
                                 } else {
-                                    // For enhanced_replicate video - crop additional 10px from bottom
-                                    croppedUv.y = croppedUv.y * 0.85; // Crop bottom 15% total
+                                    // For enhanced_replicate video - crop 10px more from bottom
+                                    croppedUv.y = croppedUv.y * 0.8; // Crop bottom 20% total
                                     
                                     // Discard pixels outside the cropped area
-                                    if (croppedUv.y > 0.85) {
+                                    if (croppedUv.y > 0.8) {
                                         discard;
                                     }
                                 }
@@ -737,8 +737,8 @@
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
-                // Scaling based on Z position for depth perception
-                const depthScale = 1 + (object.position.z * 0.1); // Objects get bigger as they come forward
+                // Enhanced scaling for extreme foreground effect
+                const depthScale = 1 + (object.position.z * 0.05); // More dramatic scaling
                 const scaleVariation = depthScale * (1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.15);
                 object.scale.multiplyScalar(scaleVariation);
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
@@ -814,8 +814,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // 3D depth movement - objects can only move forward (toward viewer)
-                object.position.z = Math.abs(Math.sin(time * 0.3 + index) * 5 + Math.cos(time * 0.2 + index * 0.5) * 3);
+                // 3D depth movement - objects can move much further into foreground (+40)
+                object.position.z = Math.abs(Math.sin(time * 0.3 + index) * 20 + Math.cos(time * 0.2 + index * 0.5) * 15 + Math.sin(time * 0.1 + index * 2) * 5);
             });
             
             // Check for collisions between objects
