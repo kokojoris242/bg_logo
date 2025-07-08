@@ -743,9 +743,12 @@
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
-                // Enhanced floating animation with more dramatic scaling for depth effect
-                const scaleVariation = 1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.25 + 
-                                      Math.cos(time * object.userData.floatSpeed * 0.3 + object.userData.floatOffset * 1.5) * 0.15;
+                // Extreme scaling based on Z position for dramatic depth effect
+                const depthFactor = (object.position.z + 25) / 40; // Normalize Z position to 0-1 range
+                const depthScale = 0.3 + (depthFactor * 1.4); // Scale from 30% to 170% based on depth
+                
+                const scaleVariation = depthScale * (1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.2 + 
+                                      Math.cos(time * object.userData.floatSpeed * 0.3 + object.userData.floatOffset * 1.5) * 0.1);
                 object.scale.multiplyScalar(scaleVariation);
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
                     object.userData.floatRange * 0.01;
@@ -820,8 +823,11 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Enhanced 3D depth movement - objects move dramatically forward and backward
-                object.position.z = Math.sin(time * 0.3 + index) * 8 + Math.cos(time * 0.2 + index * 0.5) * 5 + Math.sin(time * 0.1 + index * 2) * 3;
+                // Extreme 3D depth movement - objects move very far forward and backward
+                const baseZ = Math.sin(time * 0.3 + index) * 15 + Math.cos(time * 0.2 + index * 0.5) * 10 + Math.sin(time * 0.1 + index * 2) * 8;
+                
+                // Constrain Z position to prevent clipping with walls/background
+                object.position.z = Math.max(-25, Math.min(15, baseZ));
             });
             
             // Check for collisions between objects
