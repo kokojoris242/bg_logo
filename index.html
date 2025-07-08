@@ -65,19 +65,19 @@
                                 vec2 croppedUv = vUv;
                                 
                                 if (videoType < 1.5) {
-                                    // For Lego video - crop more from top (30px equivalent)
-                                    croppedUv.y = croppedUv.y * 0.75 + 0.15; // Crop top 15% and bottom 10%
+                                    // For Lego video - crop additional 20px from top
+                                    croppedUv.y = croppedUv.y * 0.7 + 0.2; // Crop top 20% and bottom 10%
                                     
                                     // Discard pixels outside the cropped area
-                                    if (croppedUv.y > 0.9 || croppedUv.y < 0.15) {
+                                    if (croppedUv.y > 0.9 || croppedUv.y < 0.2) {
                                         discard;
                                     }
                                 } else {
-                                    // For enhanced_replicate video - crop bottom to remove black bar
-                                    croppedUv.y = croppedUv.y * 0.9; // Crop bottom 10%
+                                    // For enhanced_replicate video - crop additional 10px from bottom
+                                    croppedUv.y = croppedUv.y * 0.85; // Crop bottom 15% total
                                     
                                     // Discard pixels outside the cropped area
-                                    if (croppedUv.y > 0.9) {
+                                    if (croppedUv.y > 0.85) {
                                         discard;
                                     }
                                 }
@@ -737,8 +737,9 @@
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
-                // Regular floating animation with standard scaling
-                const scaleVariation = 1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.15;
+                // Scaling based on Z position for depth perception
+                const depthScale = 1 + (object.position.z * 0.1); // Objects get bigger as they come forward
+                const scaleVariation = depthScale * (1 + Math.sin(time * object.userData.floatSpeed * 0.5 + object.userData.floatOffset) * 0.15);
                 object.scale.multiplyScalar(scaleVariation);
                 object.position.y += Math.sin(time * object.userData.floatSpeed + object.userData.floatOffset) * 
                     object.userData.floatRange * 0.01;
@@ -813,8 +814,8 @@
                     object.position.y = Math.max(-boundaryY, Math.min(boundaryY, object.position.y));
                 }
                 
-                // Simple 2D movement - objects stay on same plane
-                object.position.z = 0;
+                // 3D depth movement - objects can only move forward (toward viewer)
+                object.position.z = Math.abs(Math.sin(time * 0.3 + index) * 5 + Math.cos(time * 0.2 + index * 0.5) * 3);
             });
             
             // Check for collisions between objects
