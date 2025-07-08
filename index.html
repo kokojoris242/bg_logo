@@ -325,21 +325,21 @@
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/tomate.glb', 
                 { x: -7, y: -1, scale: 7.5, rotationSpeed: 0.012, floatSpeed: 0.9, floatRange: 0.4, radius: 3.75 });
 
-            // Add haase.glb model (30% bigger)
+            // Add haase.glb model (30% bigger from previous 30% increase = 60% total)
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/haase.glb', 
-                { x: 8, y: -3, scale: 5.2, rotationSpeed: -0.010, floatSpeed: 0.7, floatRange: 0.35, radius: 2.6 });
+                { x: 8, y: -3, scale: 6.76, rotationSpeed: -0.010, floatSpeed: 0.7, floatRange: 0.35, radius: 3.38 });
 
-            // Add jacke.glb model
+            // Add jacke.glb model (50% bigger)
             loadFloatingModel('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/jacke.glb', 
-                { x: -5, y: 0, scale: 5, rotationSpeed: -0.009, floatSpeed: 0.8, floatRange: 0.35, radius: 2.5 });
+                { x: -5, y: 0, scale: 7.5, rotationSpeed: -0.009, floatSpeed: 0.8, floatRange: 0.35, radius: 3.75 });
 
             // Add MP4 video with green screen keying (50% bigger)
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/d9da7629-2231-48a6-9087-7074237fb446.mp4', 
                 { x: 2, y: -2, scale: 6, rotationSpeed: 0, floatSpeed: 0.4, floatRange: 0.2, radius: 3.0 });
 
-            // Add Professional Mode man in black suit MP4 video
+            // Add Professional Mode man in black suit MP4 video (30% bigger)
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/Professional_Mode_The_man_in_a_black_suit_stands_i.mp4', 
-                { x: 0, y: 4, scale: 5, rotationSpeed: 0, floatSpeed: 0.6, floatRange: 0.35, radius: 2.5 });
+                { x: 0, y: 4, scale: 6.5, rotationSpeed: 0, floatSpeed: 0.6, floatRange: 0.35, radius: 3.25 });
 
             // Add enhanced_replicate MP4 video with green screen keying (100% bigger)
             loadFloatingVideo('https://raw.githubusercontent.com/kokojoris242/bg_logo/main/enhanced_replicate-prediction-k9xk34ece1rm80cqxa4txz72yc 2.mp4', 
@@ -676,27 +676,27 @@
                     const minDistance = obj1.userData.radius + obj2.userData.radius;
                     
                     if (distance < minDistance && distance > 0) {
-                        // 3D collision detected - bounce objects in all dimensions
+                        // Smooth 3D collision - gentler separation and bounce
                         const overlap = minDistance - distance;
-                        const separationX = (dx / distance) * overlap * 0.5;
-                        const separationY = (dy / distance) * overlap * 0.5;
-                        const separationZ = (dz / distance) * overlap * 0.5;
+                        const separationX = (dx / distance) * overlap * 0.2; // Reduced from 0.5
+                        const separationY = (dy / distance) * overlap * 0.2;
+                        const separationZ = (dz / distance) * overlap * 0.2;
                         
-                        // Separate objects in 3D space
+                        // Gentle separation in 3D space
                         obj1.position.x += separationX;
                         obj1.position.y += separationY;
-                        obj1.position.z = Math.max(0, obj1.position.z + separationZ); // Keep positive Z
+                        obj1.position.z = Math.max(0, obj1.position.z + separationZ);
                         obj2.position.x -= separationX;
                         obj2.position.y -= separationY;
-                        obj2.position.z = Math.max(0, obj2.position.z - separationZ); // Keep positive Z
+                        obj2.position.z = Math.max(0, obj2.position.z - separationZ);
                         
-                        // Calculate 3D bounce velocities
-                        const bounceStrength = 0.8;
-                        const bounceX = (dx / distance) * bounceStrength * 0.02;
-                        const bounceY = (dy / distance) * bounceStrength * 0.02;
-                        const bounceZ = (dz / distance) * bounceStrength * 0.01; // Z-axis push effect
+                        // Smooth 3D bounce velocities
+                        const bounceStrength = 0.3; // Reduced from 0.8
+                        const bounceX = (dx / distance) * bounceStrength * 0.01; // Reduced from 0.02
+                        const bounceY = (dy / distance) * bounceStrength * 0.01;
+                        const bounceZ = (dz / distance) * bounceStrength * 0.005; // Reduced from 0.01
                         
-                        // Apply 3D bounce - objects can push each other forward
+                        // Apply gentle 3D bounce
                         obj1.userData.velocity.x += bounceX;
                         obj1.userData.velocity.y += bounceY;
                         if (!obj1.userData.velocityZ) obj1.userData.velocityZ = 0;
@@ -727,7 +727,7 @@
                 
                 // Smooth movement towards target if being dragged
                 if (object.userData.targetX !== undefined && object.userData.targetY !== undefined) {
-                    const lerpSpeed = 0.1;
+                    const lerpSpeed = 0.15; // Slightly faster response
                     object.position.x += (object.userData.targetX - object.position.x) * lerpSpeed;
                     object.position.y += (object.userData.targetY - object.position.y) * lerpSpeed;
                     
@@ -740,7 +740,7 @@
                 }
                 
                 // Apply rotating gravity (less strong when object is being controlled)
-                const gravityReduction = (selectedObject === object) ? 0.3 : 1.0;
+                const gravityReduction = (selectedObject === object) ? 0.1 : 1.0; // Stronger reduction for mouse control
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
