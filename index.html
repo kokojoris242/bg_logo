@@ -725,22 +725,27 @@
             objects.forEach((object, index) => {
                 if (!object.userData) return;
                 
-                // Smooth movement towards target if being dragged
+                // Smooth movement towards target if being dragged - stronger control
                 if (object.userData.targetX !== undefined && object.userData.targetY !== undefined) {
-                    const lerpSpeed = 0.15; // Slightly faster response
+                    const lerpSpeed = 0.3; // Much faster response
                     object.position.x += (object.userData.targetX - object.position.x) * lerpSpeed;
                     object.position.y += (object.userData.targetY - object.position.y) * lerpSpeed;
                     
+                    // Reset all physics when being controlled
+                    object.userData.velocity.x *= 0.5;
+                    object.userData.velocity.y *= 0.5;
+                    if (object.userData.velocityZ) object.userData.velocityZ *= 0.5;
+                    
                     // Clear target when close enough
-                    if (Math.abs(object.userData.targetX - object.position.x) < 0.1 && 
-                        Math.abs(object.userData.targetY - object.position.y) < 0.1) {
+                    if (Math.abs(object.userData.targetX - object.position.x) < 0.2 && 
+                        Math.abs(object.userData.targetY - object.position.y) < 0.2) {
                         object.userData.targetX = undefined;
                         object.userData.targetY = undefined;
                     }
                 }
                 
-                // Apply rotating gravity (less strong when object is being controlled)
-                const gravityReduction = (selectedObject === object) ? 0.1 : 1.0; // Stronger reduction for mouse control
+                // Apply rotating gravity (much less when object is being controlled)
+                const gravityReduction = (selectedObject === object) ? 0.01 : 1.0; // Much stronger reduction
                 object.userData.velocity.x += gravityX * gravityReduction;
                 object.userData.velocity.y += gravityY * gravityReduction;
                 
